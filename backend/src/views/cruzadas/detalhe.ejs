@@ -1,0 +1,73 @@
+<%- include('../partials/head', { titulo: cruzada.titulo }) %>
+<%- include('../partials/nav') %>
+
+<% if (criada) { %><div class="alert alert-ok">Cruzada criada e persistida no banco! ✅</div><% } %>
+<% if (atualizada) { %><div class="alert alert-ok">Nova versão v<%= atualizada %> salva! O histórico anterior foi preservado (RN09).</div><% } %>
+
+<div class="page-head">
+  <div>
+    <h1><%= cruzada.titulo %></h1>
+    <p class="muted">
+      <%= cruzada.disciplina %> ·
+      <span class="pill pill-<%= cruzada.dificuldade %>"><%= cruzada.dificuldade %></span>
+      <span class="pill pill-status pill-<%= cruzada.status %>"><%= cruzada.status %></span>
+      <% if (cruzada.codigo_acesso) { %> · <span class="code-tag">🔑 <%= cruzada.codigo_acesso %></span><% } %>
+      · autor @<%= cruzada.autor_usertag %>
+      · v<%= cruzada.versao_atual ? cruzada.versao_atual.numero_versao : '—' %>
+    </p>
+  </div>
+  <% if (ehAutor) { %>
+    <div class="acoes">
+      <a class="btn btn-ghost" href="/cruzadas/<%= cruzada.id_cruzada %>/editar">Editar</a>
+      <form method="post" action="/cruzadas/<%= cruzada.id_cruzada %>/excluir" class="inline"
+            onsubmit="return confirm('Excluir esta cruzada e todas as suas versões?');">
+        <button class="btn btn-danger" type="submit">Excluir</button>
+      </form>
+    </div>
+  <% } %>
+</div>
+
+<% if (cruzada.descricao) { %><p><%= cruzada.descricao %></p><% } %>
+
+<div class="detalhe-grid">
+  <section>
+    <h2>Grade (v<%= cruzada.versao_atual ? cruzada.versao_atual.numero_versao : '—' %>)</h2>
+    <% if (matriz.length === 0) { %>
+      <p class="muted">Sem palavras nesta versão.</p>
+    <% } else { %>
+      <table class="grade">
+        <% matriz.forEach(linha => { %>
+          <tr>
+            <% linha.forEach(celula => { %>
+              <td class="<%= celula ? 'cel' : 'cel vazia' %>"><%= celula || '' %></td>
+            <% }) %>
+          </tr>
+        <% }) %>
+      </table>
+    <% } %>
+  </section>
+
+  <section>
+    <h2>Palavras e dicas</h2>
+    <ol class="dicas">
+      <% cruzada.palavras.forEach(p => { %>
+        <li>
+          <strong><%= p.resposta %></strong>
+          <span class="muted">(<%= p.direcao %> · L<%= p.linha %> C<%= p.coluna %>)</span>
+          <br><span><%= p.dica %></span>
+        </li>
+      <% }) %>
+    </ol>
+  </section>
+</div>
+
+<section class="versoes">
+  <h3>Histórico de versões</h3>
+  <ul>
+    <% cruzada.versoes.forEach(v => { %>
+      <li>v<%= v.numero_versao %> — criada em <%= new Date(v.data_criacao).toLocaleString('pt-BR') %></li>
+    <% }) %>
+  </ul>
+</section>
+
+<%- include('../partials/foot', { aba: 'painel' }) %>

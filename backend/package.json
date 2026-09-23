@@ -1,0 +1,19 @@
+{
+  "name": "palavras-cruzadas",
+  "version": "1.0.0",
+  "description": "Jogo de Palavras Cruzadas - Ciencia da Computacao (CEFET-RJ). Fluxo do professor: cadastrar e persistir cruzadas.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "pg": "^8.12.0"
+  }
+}

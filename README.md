@@ -252,6 +252,19 @@ test: adiciona testes para geração da cruzadinha
 
 ---
 
+## 🧩 Implementação — Entrega 1 (fluxo do professor)
+
+A primeira versão executável do sistema está em [`backend/`](backend/) e entrega o
+**fluxo do professor**: cadastrar uma palavra cruzada (com validação da grade) e
+**persistir no banco**, além dos usuários professor/aluno enviados pelo **Lúdica**.
+
+- **Stack:** Node.js + Express · HTML renderizado no servidor (EJS) · PostgreSQL (Docker)
+- **Rodar:** `cd backend && docker compose up --build` → http://localhost:3000
+- Detalhes, usuários de teste e o mapeamento das regras de negócio (RN01–RN12)
+  estão em [`backend/README.md`](backend/README.md).
+
+---
+
 ## 🚧 Status do Projeto
 
 **Em desenvolvimento**
