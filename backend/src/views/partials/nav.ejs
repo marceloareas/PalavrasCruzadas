@@ -1,0 +1,25 @@
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </span>
+      <span class="brand-text">
+        Cruzadinha Digital
+        <small>● Engenharia &amp; Tech</small>
+      </span>
+    </a>
+    <nav class="topnav">
+      <% if (usuario) { %>
+        <span class="pill pill-<%= usuario.papel %>">
+          <%= usuario.papel === 'professor' ? '🎓 Professor' : '👤 Aluno' %>
+        </span>
+        <span class="pill pill-ludica">Lúdica</span>
+        <form method="post" action="/logout" class="inline">
+          <button class="btn btn-ghost btn-sm" type="submit">Sair</button>
+        </form>
+      <% } else { %>
+        <span class="pill pill-ludica">Lúdica</span>
+      <% } %>
+    </nav>
+  </header>
+  <main class="container">

@@ -1,0 +1,55 @@
+<%- include('partials/head', { titulo: 'Início' }) %>
+<%- include('partials/nav') %>
+
+<section class="hero-card">
+  <span class="chip-desafio">⚡ Desafio Universitário</span>
+  <h1 class="hero-title">Aprenda. Resolva.<br>Conquiste.</h1>
+  <p class="muted">
+    Domine terminologias de computação e arquitetura de software através de
+    palavras cruzadas semânticas.
+  </p>
+
+  <div class="board-preview">
+    <div class="bp-head"><span>Prévia do Tabuleiro</span><span>8×8 Tech Grid</span></div>
+    <table class="grade">
+      <tr>
+        <td class="cel">S</td><td class="cel">C</td><td class="cel">R</td>
+        <td class="cel">U</td><td class="cel">M</td>
+      </tr>
+      <tr>
+        <td class="cel">O</td><td class="vazia">.</td><td class="vazia">.</td>
+        <td class="vazia">.</td><td class="cel">P</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<p class="muted">Olá, <strong><%= usuario.nome || ('@' + usuario.usertag) %></strong> — você está logado como <strong><%= usuario.papel %></strong>.</p>
+
+<div class="cards-row">
+  <% if (usuario.papel === 'professor') { %>
+    <a class="card card-action" href="/cruzadas">
+      <div class="ico">🧑‍🏫</div>
+      <h3>Modo Professor</h3>
+      <p class="muted">Gerenciar turmas e criar jogos.</p>
+    </a>
+    <a class="card card-action" href="/cruzadas/nova">
+      <div class="ico">➕</div>
+      <h3>Criar desafio</h3>
+      <p class="muted">Monte a grade, defina dicas e publique.</p>
+    </a>
+  <% } else { %>
+    <a class="card card-action" href="/cruzadas">
+      <div class="ico">🎓</div>
+      <h3>Modo Aluno</h3>
+      <p class="muted">Resolver desafios e competir no ranking.</p>
+    </a>
+    <div class="card card-muted">
+      <div class="ico">🚧</div>
+      <h3>Em breve</h3>
+      <p class="muted">O fluxo do aluno será implementado na próxima etapa.</p>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/foot', { aba: 'inicio' }) %>
