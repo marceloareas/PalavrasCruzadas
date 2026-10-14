@@ -67,6 +67,11 @@ classDiagram
         respostaInformada
         correta
     }
+    class LetraRevelada {
+        linha
+        coluna
+        letra
+    }
 
     Usuario "1" --> "*" PalavraCruzada : autor
     Usuario "1" --> "*" Partida : aluno
@@ -77,11 +82,12 @@ classDiagram
     Versao "1" *-- "5..15" Palavra : (RN13)
     Versao "1" <-- "*" Partida : jogada em
     Partida "1" *-- "*" RespostaEnviada
+    Partida "1" *-- "0..3" LetraRevelada : dicas (RN20)
     RespostaEnviada "*" --> "1" Palavra : indice
 ```
 
 `Versao` + `Palavra` = `versao_cruzada` (Postgres) + `conteudo_versao` (Mongo).
-`Partida` = `sessao_jogo`; `RespostaEnviada` = `resposta_sessao`.
+`Partida` = `sessao_jogo`; `RespostaEnviada` = `resposta_sessao`; `LetraRevelada` = `dica_sessao`.
 
 ---
 

@@ -44,7 +44,9 @@ api.get('/regras', (req, res) => {
     maxPalavras: regras.MAX_PALAVRAS,
     minLetras: regras.MIN_LETRAS,
     maxLetras: regras.MAX_LETRAS,
-    maxDica: regras.MAX_DICA
+    maxDica: regras.MAX_DICA,
+    maxDicasPorPartida: regras.DICAS.maxPorPartida,
+    descontoPorLetra: regras.DICAS.descontoPorLetra
   });
 });
 

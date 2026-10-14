@@ -5,7 +5,7 @@
 // QUANTAS palavras estao certas. Ele pode conferir de novo quantas vezes
 // quiser ate completar ou encerrar.
 // ============================================================================
-import { PONTUACAO } from '../regras.js';
+import { PONTUACAO, DICAS } from '../regras.js';
 
 /**
  * Em qual tentativa a palavra foi acertada, considerando que ela precisa
@@ -23,8 +23,13 @@ export function tentativaDoAcerto(historico) {
  * @param {{ acertos: Array<number|null>, dificuldade: string, tempo: number }} partida
  *   acertos: tentativa do acerto de cada palavra (null = errada no fim)
  *   tempo:   segundos
+ *   reveladas: letras reveladas por dica (RN20) em cada palavra, na ordem de acertos
  */
-export function calcularPontuacao({ acertos, dificuldade, tempo }, cfg = PONTUACAO) {
+export function calcularPontuacao(
+  { acertos, dificuldade, tempo, reveladas = [] },
+  cfg = PONTUACAO,
+  descontoPorLetra = DICAS.descontoPorLetra
+) {
   const total = acertos.length;
   const certas = acertos.filter((t) => t !== null).length;
   const completa = total > 0 && certas === total;
@@ -33,12 +38,17 @@ export function calcularPontuacao({ acertos, dificuldade, tempo }, cfg = PONTUAC
 
   const porTentativa = {};
   let pontosPalavras = 0;
-  for (const t of acertos) {
-    if (t === null) continue;
+  let semDicas = 0;
+  acertos.forEach((t, i) => {
+    if (t === null) return;
     porTentativa[t] = (porTentativa[t] ?? 0) + 1;
-    pontosPalavras += cfg.pontosPorPalavra * fator(t);
-  }
+    const pontos = cfg.pontosPorPalavra * fator(t);
+    semDicas += pontos;
+    // RN20: cada letra revelada na palavra tira uma fracao dos pontos dela.
+    pontosPalavras += pontos * Math.max(0, 1 - descontoPorLetra * (reveladas[i] ?? 0));
+  });
   pontosPalavras *= mult;
+  semDicas *= mult;
 
   const tempoReferencia = total * cfg.segundosPorPalavra;
   const fracaoTempo = completa ? Math.max(0, 1 - tempo / tempoReferencia) : 0;
@@ -54,6 +64,7 @@ export function calcularPontuacao({ acertos, dificuldade, tempo }, cfg = PONTUAC
       acertos_por_tentativa: porTentativa,
       multiplicador_dificuldade: mult,
       pontos_palavras: Math.round(pontosPalavras),
+      desconto_dicas: Math.round(semDicas - pontosPalavras),
       bonus_tempo: Math.round(bonusTempo),
       bonus_completa: Math.round(bonusCompleta)
     }

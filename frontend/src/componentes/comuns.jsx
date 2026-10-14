@@ -75,7 +75,7 @@ export function Ranking({ linhas, destacar }) {
     <div className="tabela-scroll">
       <table className="tabela">
         <thead>
-          <tr><th>#</th><th>Aluno</th><th>Pontos</th><th>Certas</th><th>Conferências</th><th>Tempo</th></tr>
+          <tr><th>#</th><th>Aluno</th><th>Pontos</th><th>Certas</th><th>Conferências</th><th>Dicas</th><th>Tempo</th></tr>
         </thead>
         <tbody>
           {linhas.map((r) => (
@@ -85,6 +85,7 @@ export function Ranking({ linhas, destacar }) {
               <td><strong>{r.pontuacao}</strong></td>
               <td>{r.acertos}/{r.qtd_palavras}</td>
               <td>{r.tentativas}</td>
+              <td>{r.dicas || <span className="muted">—</span>}</td>
               <td>{formatarTempo(r.tempo)}</td>
             </tr>
           ))}

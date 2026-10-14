@@ -79,7 +79,7 @@ export default function DetalheCruzada() {
           <div className="tabela-scroll">
             <table className="tabela">
               <thead>
-                <tr><th>Aluno</th><th>Data</th><th>Versão</th><th>Certas</th><th>Conferências</th><th>Erros</th><th>Tempo</th><th>Pontos</th></tr>
+                <tr><th>Aluno</th><th>Data</th><th>Versão</th><th>Certas</th><th>Conferências</th><th>Dicas</th><th>Erros</th><th>Tempo</th><th>Pontos</th></tr>
               </thead>
               <tbody>
                 {c.partidas.map((p) => (
@@ -89,6 +89,7 @@ export default function DetalheCruzada() {
                     <td>v{p.numero_versao}</td>
                     <td>{p.acertos}/{p.qtd_palavras}</td>
                     <td>{p.tentativas}</td>
+                    <td>{p.dicas}</td>
                     <td>{p.erros}</td>
                     <td>{formatarTempo(p.tempo)}</td>
                     <td><strong>{p.pontuacao}</strong></td>

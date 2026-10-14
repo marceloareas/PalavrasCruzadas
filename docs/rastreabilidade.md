@@ -31,6 +31,7 @@ Caminhos: `svc/` = `backend/src/services/`, `rotas/` = `backend/src/routes/`, `p
 | RN17 | Aluno só encontra jogos publicados | UC08 | `idx_palavra_cruzada_status` | `buscarJogos` (`status = 'publicado'`); `obterJogoParaAluno`/`iniciarSessao` → 404 | `pág/aluno/BuscarJogos.jsx` | ponta a ponta (rascunho → 404) |
 | RN18 | Preenche tudo e confere; só a contagem | UC09 | `resposta_sessao` por tentativa | `conferir` devolve `{ tentativa, certas, total, concluida }` | `pág/aluno/Jogar.jsx` | ponta a ponta |
 | RN19 | Pontuação por tentativa, dificuldade, tempo e grade completa | UC09, UC10 | `sessao_jogo.pontuacao` | `svc/pontuacao.js` + `PONTUACAO` em `regras.js` | detalhamento no resultado; ranking | unitário (5 testes) + ponta a ponta |
+| RN20 | Dica revelar letra: até 3 por partida, −20% de cada palavra que passa pela casa | UC09 | `dica_sessao` + `UNIQUE (id_sessao, linha, coluna)` | `svc/dica.js` (escolha da casa), `revelarLetra` (limite, 409), desconto em `svc/pontuacao.js` | botão "💡 Revelar letra (N)", casa travada em amarelo, linha do desconto no resultado | unitário (6 testes) + ponta a ponta |
 
 ## Cobertura por caso de uso
 
@@ -44,7 +45,7 @@ Caminhos: `svc/` = `backend/src/services/`, `rotas/` = `backend/src/routes/`, `p
 | UC06 Acompanhar resultados | RN11, RN12 |
 | UC07 Solicitar disciplina | RN16 |
 | UC08 Pesquisar jogo | RN11, RN17 |
-| UC09 Jogar cruzadinha | RN09, RN10, RN11, RN12, RN18, RN19 |
+| UC09 Jogar cruzadinha | RN09, RN10, RN11, RN12, RN18, RN19, RN20 |
 | UC10 Ver progresso e ranking | RN12, RN19 |
 | UC11 Manter disciplina | RN15 |
 | UC12 Responder solicitação | RN16 |

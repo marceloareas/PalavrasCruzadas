@@ -27,7 +27,8 @@ Papéis: `professor`, `aluno`, `administrador`.
 ### `GET /regras`
 Limites usados também pelo front.
 ```json
-{ "minPalavras": 5, "maxPalavras": 15, "minLetras": 2, "maxLetras": 20, "maxDica": 300 }
+{ "minPalavras": 5, "maxPalavras": 15, "minLetras": 2, "maxLetras": 20, "maxDica": 300,
+  "maxDicasPorPartida": 3, "descontoPorLetra": 0.2 }
 ```
 
 ## Autenticação (simulada — ver [arquitetura.md](arquitetura.md#autenticação-provisória))
@@ -121,7 +122,7 @@ Página do jogo **sem respostas** (RN11).
   "verticais": ["..."],
   "sessao_aberta": null,
   "minhas_sessoes": [{ "id_sessao": 9, "numero_versao": 1, "fim": "...", "tempo": 3, "tentativas": 2, "acertos": 8, "qtd_palavras": 8, "pontuacao": 844 }],
-  "ranking": [{ "posicao": 1, "id_aluno": 3, "nome": "...", "usertag": "...", "pontuacao": 844, "tempo": 3, "acertos": 8, "tentativas": 2, "qtd_palavras": 8, "numero_versao": 1 }]
+  "ranking": [{ "posicao": 1, "id_aluno": 3, "nome": "...", "usertag": "...", "pontuacao": 844, "tempo": 3, "acertos": 8, "tentativas": 2, "dicas": 0, "qtd_palavras": 8, "numero_versao": 1 }]
 }
 ```
 Na `grade`, `null` é casa bloqueada e `""` é casa a preencher.
@@ -133,6 +134,7 @@ Na `grade`, `null` é casa bloqueada e `""` é casa a preencher.
 | POST | `/jogos/:id/sessoes` | — | `201 { "id_sessao": 9, "retomada": false }` (retomada = já havia partida aberta nessa versão) |
 | GET | `/sessoes/:id` | — | estado da partida (abaixo) |
 | POST | `/sessoes/:id/conferir` | `{ "respostas": { "1": "ROLLBACK", "2": "CHAVE", "...": "..." } }` | `{ "tentativa": 1, "certas": 3, "total": 8, "concluida": false }` |
+| POST | `/sessoes/:id/dica` | `{ "indice": 1, "atual": "RO      " }` | `{ "linha": 1, "coluna": 6, "letra": "L", "dicas_restantes": 2 }` (RN20) |
 | POST | `/sessoes/:id/encerrar` | — | `{ "encerrada": true }` |
 
 As chaves de `respostas` são o `indice` de cada palavra. Acentos e caixa são
@@ -145,6 +147,7 @@ normalizados (`"Transação"` = `"TRANSACAO"`). Palavra não enviada conta como 
   "versao": 1, "total_palavras": 8, "inicio": "...", "decorrido": 42, "encerrada": false,
   "tentativas": [{ "tentativa": 1, "certas": 3 }],
   "ultimas_respostas": { "1": "ROLLBACK", "2": "XXXXX" },
+  "dicas": [{ "linha": 1, "coluna": 6, "letra": "L" }], "dicas_restantes": 2, "desconto_por_letra": 0.2,
   "grade": "...", "numeros": "...", "horizontais": "...", "verticais": "..."
 }
 ```
@@ -153,14 +156,17 @@ Depois de **encerrada**, vêm também:
 {
   "pontuacao": 844, "tempo": 3,
   "resultado": { "certas": 8, "total": 8, "completa": true, "acertos_por_tentativa": { "1": 3, "2": 5 },
-                 "multiplicador_dificuldade": 1, "pontos_palavras": 650, "bonus_tempo": 129, "bonus_completa": 65 },
+                 "multiplicador_dificuldade": 1, "pontos_palavras": 650, "desconto_dicas": 0,
+                 "bonus_tempo": 129, "bonus_completa": 65, "dicas_usadas": 0 },
   "gabarito": {
     "matriz": [["R", "O", "..."]],
     "palavras": [{ "indice": 1, "numero": 1, "direcao": "horizontal", "resposta": "ROLLBACK", "informada": "ROLLBACK", "correta": true }]
   }
 }
 ```
-Erros: `403` partida de outro aluno, `409` conferir/encerrar partida já encerrada.
+Erros: `403` partida de outro aluno, `409` conferir/encerrar/pedir dica em partida já encerrada.
+
+**Dica (`/sessoes/:id/dica`):** `atual` é o que o aluno tem na tela para a palavra `indice` (`' '` = casa vazia). O servidor revela a primeira casa vazia ainda não revelada (ou, se a palavra estiver toda preenchida, a primeira não revelada). `409` na 4ª dica ou se todas as letras da palavra já foram reveladas; `422` se a palavra não existir.
 
 ---
 
