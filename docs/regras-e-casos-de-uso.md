@@ -40,6 +40,14 @@ responsável pela autenticação.
 - **RN11** — O sistema não exibe as respostas antes de o aluno tentar resolver a palavra cruzada.
 - **RN12** — O sistema registra tempo gasto, número de tentativas e acertos/erros por sessão de jogo, para acompanhamento, pontuação da partida e ranking dos alunos.
 - **RN17** *(nova)* — O aluno só encontra na busca jogos com status **publicado**, podendo filtrar por texto, código de acesso, disciplina e dificuldade.
+- **RN18** *(nova)* — Na partida, o aluno preenche a grade e confere. O sistema informa apenas **quantas** palavras estão certas, sem dizer quais. Cada conferência conta como uma tentativa. A partida termina quando todas estão certas ou quando o aluno a encerra; só então o gabarito é exibido.
+- **RN19** *(nova)* — A pontuação da partida considera:
+  - **em qual tentativa cada palavra foi acertada**: 1ª = 100%, 2ª = 70%, 3ª = 50%, 4ª ou mais = 30% de 100 pontos. A palavra precisa ficar certa até o fim; se o aluno acertar e depois estragar, vale a tentativa em que voltou a ficar certa;
+  - **a dificuldade**: fácil ×1, médio ×1,2, difícil ×1,5;
+  - **o tempo**: bônus de até +20% para quem completa, caindo a zero em 60 s por palavra;
+  - **completar a grade**: bônus de +10%.
+
+  O tempo é medido pelo servidor. O ranking de cada cruzada usa a melhor partida de cada aluno; no empate, vence o menor tempo. Os valores ficam em `backend/src/regras.js` (`PONTUACAO`).
 
 ## Diagrama de casos de uso
 
@@ -86,5 +94,5 @@ flowchart LR
 | Grade gerada pelo sistema | ✅ professor cadastra só resposta + dica (RN14) |
 | Aluno pesquisar jogo | ✅ busca + página do jogo (sem respostas) |
 | Solicitação de disciplina → administrador | ✅ (estava como “futuro”) |
-| Aluno resolver o jogo, pontuação e ranking | ⏳ próxima sprint (tabelas já existem) |
+| Aluno resolver o jogo, pontuação e ranking | ✅ (RN18/RN19), com resultados das partidas para o professor |
 | Login integrado ao Lúdica | ⏳ a definir — hoje o login é simulado |
