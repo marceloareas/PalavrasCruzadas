@@ -3,11 +3,10 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Instala dependencias primeiro (melhor cache).
-COPY package.json package-lock.json* ./
-RUN npm install --omit=dev
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
-# Copia o restante do codigo.
-COPY . .
+COPY src ./src
 
 EXPOSE 3000
 CMD ["npm", "start"]

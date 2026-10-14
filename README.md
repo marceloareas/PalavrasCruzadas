@@ -93,6 +93,15 @@ Principais funcionalidades:
 * Resultados;
 * Ranking.
 
+### Administrador
+
+Responsável pelo cadastro de disciplinas.
+
+Principais funcionalidades:
+
+* Manter disciplinas (criar, editar, desativar);
+* Responder solicitações de disciplina feitas pelos professores.
+
 ---
 
 ## 🔌 Integração com a Lúdica
@@ -252,71 +261,71 @@ test: adiciona testes para geração da cruzadinha
 
 ---
 
-## 🧩 Implementação — Entrega 1 (fluxo do professor)
+## 🧩 Implementação atual (Sprint 3)
 
-A primeira versão executável do sistema está em [`backend/`](backend/) e entrega o
-**fluxo do professor**: cadastrar uma palavra cruzada (com validação da grade) e
-**persistir no banco**, além dos usuários professor/aluno enviados pelo **Lúdica**.
+- **Front-end:** React + Vite ([`frontend/`](frontend/))
+- **Back-end:** Node.js + Express, API REST ([`backend/`](backend/))
+- **Bancos:** PostgreSQL (usuários, disciplinas, cruzadas, versões, sessões) + MongoDB (palavras e grade gerada de cada versão)
+- **Tudo em Docker:** `docker compose up --build` na raiz → http://localhost:8080
 
-- **Stack:** Node.js + Express · HTML renderizado no servidor (EJS) · PostgreSQL (Docker)
-- **Rodar:** `cd backend && docker compose up --build` → http://localhost:3000
-- Detalhes, usuários de teste e o mapeamento das regras de negócio (RN01–RN12)
-  estão em [`backend/README.md`](backend/README.md).
+| Perfil | O que já funciona |
+|---|---|
+| Professor | criar, editar (com versões) e excluir/arquivar jogos cadastrando **só respostas e dicas** — a grade é gerada automaticamente; solicitar disciplina nova |
+| Aluno | pesquisar jogos publicados por texto, código, disciplina e dificuldade; ver o tabuleiro e as dicas (sem respostas) e o histórico de partidas |
+| Administrador | manter disciplinas; aprovar/recusar solicitações dos professores |
+
+O login ainda é **simulado** (“entrar como” um usuário de teste ou enviar o payload do Lúdica), porque a autenticação será feita pelo Lúdica e essa integração ainda não está definida.
+
+Documentação:
+
+- [Regras de negócio e casos de uso (v2)](docs/regras-e-casos-de-uso.md)
+- [Modelo de dados — PostgreSQL + MongoDB](docs/modelo-de-dados.md)
+- [API: rotas, usuários de teste e como rodar sem Docker](backend/README.md)
 
 ---
 
 ## 🚧 Status do Projeto
 
-**Em desenvolvimento**
-
-Atualmente o projeto encontra-se na etapa de prototipação e definição da experiência do usuário.
-
-As primeiras versões têm como objetivo validar:
-
-* Fluxo do professor;
-* Fluxo do aluno;
-* Criação de jogos;
-* Cadastro de perguntas;
-* Geração da cruzadinha;
-* Experiência de resolução;
-* Sistema de pontuação;
-* Estrutura de integração com a Lúdica.
+**Em desenvolvimento.** Próxima etapa: o aluno resolver a cruzadinha, com registro de tempo, tentativas, acertos/erros, pontuação e ranking (RN10–RN12 — as tabelas já existem).
 
 ---
 
-## 🗂️ Estrutura prevista
-
-A arquitetura definitiva será definida durante a implementação.
-
-Uma estrutura inicial poderá seguir o modelo:
+## 🗂️ Estrutura
 
 ```text
-cruzadinha-digital/
-├── frontend/
-├── backend/
-├── docs/
-├── tests/
-├── .gitignore
-└── README.md
+PalavrasCruzadas/
+├── docker-compose.yml   postgres + mongo + api + web
+├── backend/             API Node/Express (ver backend/README.md)
+│   ├── db/postgres/     schema.sql, seed.sql
+│   ├── db/mongo/        modelo da coleção conteudo_versao
+│   ├── src/
+│   └── test/
+├── frontend/            React + Vite (servido por nginx no Docker)
+│   └── src/paginas/     professor/, aluno/, admin/
+└── docs/                regras de negócio, casos de uso, modelo de dados
 ```
+
+| Serviço | Endereço |
+|---|---|
+| Aplicação (React) | http://localhost:8080 |
+| API | http://localhost:3000/api |
+| PostgreSQL | localhost:5432 (postgres/postgres) |
+| MongoDB | localhost:27017 |
+
+Para desenvolver o front com recarga automática: `cd frontend && npm install && npm run dev` (http://localhost:5173, usa a API em `localhost:3000`).
 
 ---
 
 ## 🚀 Próximos passos
 
-* [ ] Definir arquitetura do sistema;
-* [ ] Definir stack tecnológica;
-* [ ] Implementar autenticação;
-* [ ] Implementar gerenciamento de usuários;
-* [ ] Implementar criação de jogos;
-* [ ] Implementar cadastro de perguntas e respostas;
-* [ ] Implementar algoritmo de geração da cruzadinha;
-* [ ] Implementar experiência de jogo do aluno;
-* [ ] Implementar pontuação;
-* [ ] Implementar ranking;
-* [ ] Implementar resultados para professores;
-* [ ] Desenvolver API;
-* [ ] Definir integração com a Lúdica;
-* [ ] Criar ambiente de desenvolvimento;
-* [ ] Criar ambiente de homologação;
-* [ ] Preparar ambiente de produção.
+* [x] Definir arquitetura e stack (React · Node/Express · PostgreSQL + MongoDB · Docker);
+* [x] Gerenciamento de usuários vindos do Lúdica (simulado);
+* [x] Criação de jogos e cadastro de perguntas e respostas;
+* [x] Algoritmo de geração da cruzadinha;
+* [x] Perfil administrador e manutenção de disciplinas;
+* [x] Busca de jogos pelo aluno;
+* [ ] Experiência de jogo do aluno (resolver a cruzadinha);
+* [ ] Pontuação e ranking;
+* [ ] Resultados para professores;
+* [ ] Integração real com a Lúdica (autenticação);
+* [ ] Ambientes de homologação e produção.

@@ -1,34 +1,29 @@
-// Middlewares de controle de acesso.
+// ============================================================================
+// Sessao e controle de acesso por papel (RN01/RN02).
+//
+// A autenticacao de verdade sera feita pelo Ludica (o sistema deve rodar
+// dentro dele). Enquanto essa integracao nao esta definida, o login e
+// simulado em routes/auth.js e a sessao guarda so o id do usuario local.
+// Quando o Ludica estiver pronto, basta trocar `carregarUsuario` para ler o
+// usuario do token/cabecalho enviado por ele.
+// ============================================================================
 import { obterUsuario } from '../services/usuarioService.js';
 
-// Carrega o usuario logado (da sessao) em req.usuario e res.locals.usuario.
 export async function carregarUsuario(req, res, next) {
-  res.locals.usuario = null;
   req.usuario = null;
   const id = req.session?.idUsuario;
-  if (id) {
-    const usuario = await obterUsuario(id);
-    if (usuario) {
-      req.usuario = usuario;
-      res.locals.usuario = usuario;
+  if (id) req.usuario = await obterUsuario(id);
+  next();
+}
+
+export function exigirPapel(...papeis) {
+  return (req, res, next) => {
+    if (!req.usuario) return res.status(401).json({ erro: 'Faça login para continuar.' });
+    if (papeis.length && !papeis.includes(req.usuario.papel)) {
+      return res.status(403).json({ erro: `Acesso restrito a: ${papeis.join(', ')}.` });
     }
-  }
-  next();
+    next();
+  };
 }
 
-export function requireLogin(req, res, next) {
-  if (!req.usuario) return res.redirect('/login');
-  next();
-}
-
-// RN02/RN03/RN08: acoes de criacao/edicao/exclusao sao exclusivas de professor.
-export function requireProfessor(req, res, next) {
-  if (!req.usuario) return res.redirect('/login');
-  if (req.usuario.papel !== 'professor') {
-    return res.status(403).render('erro', {
-      titulo: 'Acesso negado',
-      mensagem: 'Apenas professores podem acessar esta area (RN02).'
-    });
-  }
-  next();
-}
+export const exigirLogin = exigirPapel();

@@ -1,7 +1,7 @@
 {
-  "name": "palavras-cruzadas",
-  "version": "1.0.0",
-  "description": "Jogo de Palavras Cruzadas - Ciencia da Computacao (CEFET-RJ). Fluxo do professor: cadastrar e persistir cruzadas.",
+  "name": "cruzadinha-api",
+  "version": "2.0.0",
+  "description": "API da Cruzadinha Digital (CEFET-RJ) - Node + Express, PostgreSQL + MongoDB.",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "ejs": "^3.1.10",
-    "express": "^4.19.2",
-    "express-session": "^1.18.0",
-    "pg": "^8.12.0"
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "mongodb": "^6.10.0",
+    "pg": "^8.13.1"
   }
 }
