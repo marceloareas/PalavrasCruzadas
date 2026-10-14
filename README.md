@@ -1,292 +1,89 @@
 # 🎮 Cruzadinha Digital
 
-Sistema educacional gamificado baseado em palavras cruzadas, desenvolvido para permitir que professores criem atividades acadêmicas e que alunos possam acessá-las e resolvê-las de forma interativa.
+Sistema educacional gamificado de **palavras cruzadas** para disciplinas de
+Ciência da Computação (CEFET-RJ). Professores criam jogos cadastrando só as
+respostas e as dicas, e o sistema monta a grade. Alunos encontram os jogos,
+resolvem, recebem pontuação e entram no ranking. Um administrador mantém as
+disciplinas.
 
-A aplicação será integrada futuramente, via API, à central de jogos **Lúdica**, permitindo que os jogos da Cruzadinha Digital façam parte do ecossistema da plataforma.
+O sistema vai rodar dentro da **Lúdica**, a central de jogos educacionais, que
+fará a autenticação e enviará os usuários (`id, usertag, email, papel`).
 
----
-
-## 📚 Sobre o sistema
-
-A **Cruzadinha Digital** permite transformar conteúdos acadêmicos em desafios interativos.
-
-O professor poderá:
-
-* Criar novos jogos;
-* Definir o tema acadêmico da atividade;
-* Cadastrar perguntas e respostas;
-* Gerar a estrutura da cruzadinha;
-* Editar e revisar a atividade;
-* Publicar o jogo;
-* Compartilhar o jogo com os alunos;
-* Acompanhar o desempenho dos participantes.
-
-Os alunos poderão:
-
-* Visualizar jogos disponíveis;
-* Acessar jogos através de um código;
-* Resolver as cruzadinhas;
-* Receber feedback sobre suas respostas;
-* Acompanhar sua pontuação;
-* Visualizar resultados e rankings.
-
-### Exemplo de utilização
-
-Um professor da disciplina de **Engenharia de Software** cria um jogo chamado:
-
-> Engenharia de Software — Conceitos Fundamentais
-
-Ele cadastra perguntas como:
-
-> Qual modelo de desenvolvimento divide o projeto em ciclos incrementais?
-
-Resposta:
-
-> INCREMENTAL
-
-O sistema utiliza as respostas cadastradas para montar a cruzadinha.
-
-O professor então publica o jogo e disponibiliza um código para os alunos.
-
-Os alunos acessam o código, iniciam o desafio e respondem às perguntas através da cruzadinha.
+**Objetivos:** tornar as atividades acadêmicas mais interativas, estimular a
+aprendizagem com gamificação, facilitar a criação de atividades pelos
+professores, permitir que os alunos pratiquem conteúdos de diferentes
+disciplinas e disponibilizar dados de desempenho para acompanhamento.
 
 ---
 
-## 🎯 Objetivos
+## 🚀 Como rodar
 
-* Tornar atividades acadêmicas mais interativas;
-* Estimular a aprendizagem através de gamificação;
-* Facilitar a criação de atividades por professores;
-* Permitir que alunos pratiquem conteúdos de diferentes disciplinas;
-* Integrar jogos educacionais à central **Lúdica**;
-* Disponibilizar dados de desempenho para acompanhamento dos alunos.
+Pré-requisito: Docker Desktop aberto.
+
+```bash
+docker compose up --build
+```
+
+Abra **http://localhost:8080** e, na tela de login, escolha um usuário de teste:
+
+| Usuário | Perfil |
+|---|---|
+| `prof.carlos`, `prof.ana` | Professor |
+| `aluno.bruno`, `aluno.duda`, `aluno.rafa` | Aluno |
+| `admin.dcc` | Administrador |
+
+A primeira subida já cria 4 cruzadas de exemplo e algumas partidas.
+Para recomeçar do zero: `docker compose down -v && docker compose up --build`.
+
+Mais detalhes (rodar sem Docker, testes, problemas comuns):
+[docs/desenvolvimento.md](docs/desenvolvimento.md).
 
 ---
 
-## 👥 Perfis de usuário
+## 👥 O que cada perfil faz
 
 ### Professor
-
-Responsável pela criação e gerenciamento dos jogos.
-
-Principais funcionalidades:
-
-* Dashboard;
-* Criação de jogos;
-* Cadastro de perguntas e respostas;
-* Geração da cruzadinha;
-* Edição de atividades;
-* Publicação;
-* Compartilhamento;
-* Acompanhamento de resultados.
+- **Cria jogos** informando título, disciplina (uma só — RN04), dificuldade,
+  status e de **5 a 15 pares resposta + dica**. Ao salvar, o sistema **gera a
+  grade automaticamente** e recusa se alguma palavra não encaixar.
+- **Edita** jogos: se as palavras mudam, nasce uma **nova versão** e as
+  partidas antigas continuam ligadas à versão jogada (RN09).
+- **Publica** (só jogos publicados aparecem para os alunos), arquiva ou exclui
+  (só jogos que ninguém jogou).
+- Vê o **gabarito**, o **ranking** e as **partidas dos alunos** de cada jogo,
+  e um painel com estatísticas.
+- **Solicita disciplinas novas** ao administrador.
 
 ### Aluno
-
-Responsável por participar dos jogos.
-
-Principais funcionalidades:
-
-* Visualização de jogos;
-* Entrada através de código;
-* Resolução da cruzadinha;
-* Pontuação;
-* Resultados;
-* Ranking.
+- **Busca jogos** por texto, código de acesso, disciplina e dificuldade.
+- **Joga**: preenche a grade inteira e confere; o sistema diz **quantas**
+  palavras estão certas (não quais). Confere quantas vezes quiser, até completar ou encerrar.
+- Recebe **pontuação** pela tentativa em que acertou cada palavra, pela
+  dificuldade e pelo tempo. Vê o gabarito no fim, o ranking e o histórico das
+  próprias partidas. Pode jogar de novo.
 
 ### Administrador
-
-Responsável pelo cadastro de disciplinas.
-
-Principais funcionalidades:
-
-* Manter disciplinas (criar, editar, desativar);
-* Responder solicitações de disciplina feitas pelos professores.
+- **Mantém as disciplinas** (criar, editar, desativar, excluir).
+- **Aprova ou recusa** as solicitações de disciplina dos professores.
 
 ---
 
-## 🔌 Integração com a Lúdica
+## 🧱 Stack
 
-A Cruzadinha Digital será integrada futuramente à **Lúdica**, uma central de jogos educacionais.
-
-A comunicação entre os sistemas será realizada através de uma API.
-
-A integração poderá contemplar:
-
-* Autenticação;
-* Usuários;
-* Jogos;
-* Dados das atividades;
-* Códigos de acesso;
-* Resultados;
-* Pontuações;
-* Dados de desempenho.
-
-A implementação detalhada da integração será definida durante o desenvolvimento do sistema.
-
----
-
-# 🌿 Estratégia de Branches
-
-O projeto utilizará uma estratégia simples de branches para separar desenvolvimento, homologação e produção.
-
-```text
-feature/*
-    ↓
-   dev
-    ↓
- homolog
-    ↓
-  main
-```
-
-### `main`
-
-Branch de **produção**.
-
-Deve conter somente versões estáveis e validadas do sistema.
-
-Não devem ser realizadas alterações diretamente nessa branch.
-
----
-
-### `homolog`
-
-Branch destinada ao ambiente de **homologação**.
-
-É utilizada para validar as funcionalidades antes que sejam disponibilizadas em produção.
-
-Fluxo:
-
-```text
-dev → homolog
-```
-
-Após os testes e aprovação:
-
-```text
-homolog → main
-```
-
----
-
-### `dev`
-
-Branch principal de **desenvolvimento e integração**.
-
-As novas funcionalidades devem ser integradas nessa branch antes de serem encaminhadas para homologação.
-
-```text
-feature/* → dev
-```
-
----
-
-### `feature/*`
-
-Branches utilizadas para desenvolver funcionalidades específicas.
-
-Exemplos:
-
-```text
-feature/login
-feature/criacao-jogo
-feature/cadastro-perguntas
-feature/geracao-cruzadinha
-feature/jogo-aluno
-feature/ranking
-feature/resultados
-feature/integracao-ludica
-```
-
-Após a conclusão da funcionalidade, a branch deve ser integrada à `dev`.
-
----
-
-## 🔄 Fluxo de Desenvolvimento
-
-1. Criar uma branch a partir de `dev`:
-
-```bash
-git checkout dev
-git pull
-git checkout -b feature/nome-da-funcionalidade
-```
-
-2. Desenvolver a funcionalidade.
-
-3. Realizar commits seguindo uma descrição clara:
-
-```bash
-git add .
-git commit -m "feat: adiciona criação de jogos"
-```
-
-4. Enviar a branch para o repositório:
-
-```bash
-git push -u origin feature/nome-da-funcionalidade
-```
-
-5. Abrir Pull Request para `dev`.
-
-6. Após integração e testes em desenvolvimento, promover `dev` para `homolog`.
-
-7. Após validação em homologação, promover `homolog` para `main`.
-
----
-
-## 📝 Convenção de Commits
-
-Sugestão de utilização do padrão **Conventional Commits**:
-
-| Prefixo     | Utilização                      |
-| ----------- | ------------------------------- |
-| `feat:`     | Nova funcionalidade             |
-| `fix:`      | Correção de bug                 |
-| `refactor:` | Refatoração                     |
-| `docs:`     | Documentação                    |
-| `test:`     | Testes                          |
-| `chore:`    | Configurações/manutenção        |
-| `style:`    | Alterações de estilo/formatação |
-
-Exemplos:
-
-```bash
-feat: adiciona criação de jogos
-feat: implementa cadastro de perguntas
-fix: corrige seleção de células da cruzadinha
-docs: atualiza documentação da API
-test: adiciona testes para geração da cruzadinha
-```
-
----
-
-## 🧩 Implementação atual (Sprint 3)
-
-- **Front-end:** React + Vite ([`frontend/`](frontend/))
-- **Back-end:** Node.js + Express, API REST ([`backend/`](backend/))
-- **Bancos:** PostgreSQL (usuários, disciplinas, cruzadas, versões, sessões) + MongoDB (palavras e grade gerada de cada versão)
-- **Tudo em Docker:** `docker compose up --build` na raiz → http://localhost:8080
-
-| Perfil | O que já funciona |
+| Camada | Tecnologia |
 |---|---|
-| Professor | criar, editar (com versões) e excluir/arquivar jogos cadastrando **só respostas e dicas** — a grade é gerada automaticamente; solicitar disciplina nova |
-| Aluno | pesquisar jogos publicados por texto, código, disciplina e dificuldade; jogar (preenche a grade, confere e vê quantas palavras acertou); pontuação, ranking e histórico de partidas |
-| Administrador | manter disciplinas; aprovar/recusar solicitações dos professores |
+| Front-end | React 18 + Vite + React Router (servido por nginx) |
+| Back-end | Node.js + Express 5 — API REST em JSON |
+| Bancos | **PostgreSQL** (usuários, disciplinas, cruzadas, versões, partidas) + **MongoDB** (palavras e grade de cada versão) |
+| Infra | Docker Compose: `web`, `api`, `postgres`, `mongo` |
 
-O login ainda é **simulado** (“entrar como” um usuário de teste ou enviar o payload do Lúdica), porque a autenticação será feita pelo Lúdica e essa integração ainda não está definida.
-
-Documentação:
-
-- [Regras de negócio e casos de uso (v2)](docs/regras-e-casos-de-uso.md)
-- [Modelo de dados — PostgreSQL + MongoDB](docs/modelo-de-dados.md)
-- [API: rotas, usuários de teste e como rodar sem Docker](backend/README.md)
-
----
-
-## 🚧 Status do Projeto
-
-**Em desenvolvimento.** O fluxo completo já funciona: o professor cria, o aluno encontra e joga, e o professor vê os resultados. Pendente: integração real com o Lúdica.
+```mermaid
+flowchart LR
+    B[Navegador] --> W["web · nginx + React<br/>:8080"]
+    W -->|/api| A["api · Node/Express<br/>:3000"]
+    A --> P[("PostgreSQL")]
+    A --> M[("MongoDB")]
+```
 
 ---
 
@@ -294,38 +91,81 @@ Documentação:
 
 ```text
 PalavrasCruzadas/
-├── docker-compose.yml   postgres + mongo + api + web
-├── backend/             API Node/Express (ver backend/README.md)
-│   ├── db/postgres/     schema.sql, seed.sql
-│   ├── db/mongo/        modelo da coleção conteudo_versao
+├── docker-compose.yml        postgres + mongo + api + web
+├── docs/                     documentação (índice abaixo)
+├── backend/                  API Node/Express
+│   ├── db/postgres/          schema.sql, seed.sql
+│   ├── db/mongo/             modelo da coleção conteudo_versao
 │   ├── src/
-│   └── test/
-├── frontend/            React + Vite (servido por nginx no Docker)
-│   └── src/paginas/     professor/, aluno/, admin/
-└── docs/                regras de negócio, casos de uso, modelo de dados
+│   │   ├── routes/           auth, cruzadas (professor, aluno, partida), disciplinas
+│   │   ├── services/         regras de negócio, gerador de grade, pontuação
+│   │   ├── db/               conexões Postgres e Mongo
+│   │   ├── middleware/       sessão e papéis
+│   │   └── regras.js         limites e tabela de pontuação
+│   └── test/                 testes do gerador e da pontuação
+└── frontend/                 React
+    └── src/paginas/          Login, professor/, aluno/, admin/
 ```
-
-| Serviço | Endereço |
-|---|---|
-| Aplicação (React) | http://localhost:8080 |
-| API | http://localhost:3000/api |
-| PostgreSQL | localhost:5432 (postgres/postgres) |
-| MongoDB | localhost:27017 |
-
-Para desenvolver o front com recarga automática: `cd frontend && npm install && npm run dev` (http://localhost:5173, usa a API em `localhost:3000`).
 
 ---
 
-## 🚀 Próximos passos
+## 📖 Documentação
 
-* [x] Definir arquitetura e stack (React · Node/Express · PostgreSQL + MongoDB · Docker);
-* [x] Gerenciamento de usuários vindos do Lúdica (simulado);
-* [x] Criação de jogos e cadastro de perguntas e respostas;
-* [x] Algoritmo de geração da cruzadinha;
-* [x] Perfil administrador e manutenção de disciplinas;
-* [x] Busca de jogos pelo aluno;
-* [x] Experiência de jogo do aluno (resolver a cruzadinha);
-* [x] Pontuação e ranking;
-* [x] Resultados para professores;
-* [ ] Integração real com a Lúdica (autenticação);
-* [ ] Ambientes de homologação e produção.
+| Documento | Conteúdo |
+|---|---|
+| [Arquitetura](docs/arquitetura.md) | Serviços, camadas do back-end, os dois bancos e a consistência entre eles, autenticação provisória, como as respostas ficam protegidas, estrutura de pastas |
+| [Modelo de dados](docs/modelo-de-dados.md) | Diagrama ER do PostgreSQL, documento do MongoDB e o que mudou em relação ao modelo anterior |
+| [Regras de negócio e casos de uso](docs/regras-e-casos-de-uso.md) | RN01–RN19 e diagrama de casos de uso |
+| [API](docs/api.md) | Todas as rotas, com corpos e respostas |
+| [Gerador de grade](docs/gerador-de-grade.md) | Como o sistema monta a cruzadinha a partir das respostas |
+| [Jogo e pontuação](docs/jogo-e-pontuacao.md) | Fluxo da partida, o que é registrado, fórmula de pontos, ranking |
+| [Front-end](docs/frontend.md) | Telas por perfil, componentes, detalhes da tela de jogo |
+| [Guia de desenvolvimento](docs/desenvolvimento.md) | Rodar, testar, usuários de teste, onde mexer, problemas comuns, fluxo de Git |
+| [Histórico e decisões](docs/historico-e-decisoes.md) | O que cada sprint pediu e como foi atendido, decisões tomadas e pendências |
+
+---
+
+## 🌿 Branches e commits
+
+```text
+feature/*  →  dev  →  homolog  →  main
+```
+
+| Branch | Uso |
+|---|---|
+| `main` | Produção — só versões validadas; nada é feito direto nela |
+| `homolog` | Homologação — valida o que veio da `dev` antes de ir para `main` |
+| `dev` | Integração do desenvolvimento |
+| `feature/*` | Uma funcionalidade por branch, criada a partir da `dev` e integrada por PR |
+
+```bash
+git checkout dev && git pull
+git checkout -b feature/nome-da-funcionalidade
+# ... commits ...
+git push -u origin feature/nome-da-funcionalidade   # e abrir PR para a dev
+```
+
+Commits no padrão **Conventional Commits**: `feat:`, `fix:`, `docs:`, `test:`,
+`refactor:`, `chore:`, `style:` (ex.: `feat: adiciona ranking por cruzada`).
+
+---
+
+## 🚧 Status
+
+**Em desenvolvimento.** O fluxo completo funciona: o professor cria → o aluno
+encontra e joga → pontuação, ranking e resultados para o professor.
+
+- [x] Arquitetura e stack (React · Node/Express · PostgreSQL + MongoDB · Docker)
+- [x] Usuários no formato do Lúdica (login simulado)
+- [x] Criação e edição de jogos com versões
+- [x] Geração automática da cruzadinha
+- [x] Perfil administrador e manutenção de disciplinas
+- [x] Solicitação de disciplina (professor → administrador)
+- [x] Busca de jogos pelo aluno
+- [x] Resolução da cruzadinha, pontuação e ranking
+- [x] Resultados das partidas para o professor
+- [ ] Integração real com o Lúdica (autenticação)
+- [ ] Ambientes de homologação e produção
+
+Decisões que ainda precisam ser validadas pelo grupo e pelo professor:
+[docs/historico-e-decisoes.md](docs/historico-e-decisoes.md#registro-de-decisões).
