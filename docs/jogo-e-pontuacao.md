@@ -29,7 +29,7 @@ testes: [`pontuacao.test.js`](../backend/test/pontuacao.test.js)
 
 ```mermaid
 stateDiagram-v2
-    [*] --> EmAndamento: POST /jogos/:id/sessoes
+    [*] --> EmAndamento: Jogar (POST /jogos/ID/sessoes)
     EmAndamento --> EmAndamento: conferir (algumas erradas)
     EmAndamento --> Encerrada: conferir (todas certas)
     EmAndamento --> Encerrada: encerrar
