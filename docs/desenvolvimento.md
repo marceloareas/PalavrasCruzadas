@@ -88,6 +88,20 @@ npm test
 Os testes não precisam de banco. Fluxos com banco (API) foram testados ponta a
 ponta com scripts e com o navegador automatizado durante o desenvolvimento.
 
+## Deploy em produção
+
+`docker-compose.prod.yml` é aplicado por cima do compose de desenvolvimento:
+só o nginx fica exposto, as senhas vêm do `.env.prod`, o MongoDB passa a
+exigir usuário e senha e os containers reiniciam sozinhos.
+
+```bash
+cp .env.prod.example .env.prod      # troque todas as senhas
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+
+Passo a passo completo, backup/restauração e HTTPS:
+[Manual do Desenvolvedor, seção 8](manuais/manual-desenvolvedor.md#8-deploy-em-produção).
+
 ## Onde mexer para…
 
 | Quero… | Arquivo |
