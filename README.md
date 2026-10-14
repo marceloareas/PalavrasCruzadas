@@ -111,6 +111,13 @@ PalavrasCruzadas/
 
 ## 📖 Documentação
 
+**Manuais (entrega do checkpoint)** — em Word e Markdown: [docs/manuais/](docs/manuais/)
+
+| Documento | Conteúdo |
+|---|---|
+| [Manual do Desenvolvedor](docs/manuais/manual-desenvolvedor.md) | Instalação do ambiente, diagrama de implantação, modelo lógico, API, deploy em produção, backup |
+| [Manual do Usuário](docs/manuais/manual-usuario.md) | Uso por perfil com telas, diagramas de atividade e sequência, regras de negócio, perguntas frequentes |
+
 **Análise e modelagem**
 
 | Documento | Conteúdo |
