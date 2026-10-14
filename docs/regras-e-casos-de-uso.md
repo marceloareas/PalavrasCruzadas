@@ -1,4 +1,4 @@
-# Regras de negócio e casos de uso — v2 (Sprint 3)
+# Regras de negócio — v2
 
 Atualização do documento inicial (v1) com o que foi discutido nas Sprints 2 e 3.
 
@@ -49,39 +49,11 @@ responsável pela autenticação.
 
   O tempo é medido pelo servidor. O ranking de cada cruzada usa a melhor partida de cada aluno; no empate, vence o menor tempo. Os valores ficam em `backend/src/regras.js` (`PONTUACAO`).
 
-## Diagrama de casos de uso
+## Casos de uso
 
-```mermaid
-flowchart LR
-    P([Professor])
-    A([Aluno])
-    AD([Administrador])
-
-    subgraph Sistema["Cruzadinha Digital"]
-        UC1(Criar cruzadinha)
-        UC2(Editar cruzadinha)
-        UC3(Excluir / arquivar cruzadinha)
-        UC4(Solicitar disciplina)
-        UC5(Pesquisar jogo)
-        UC6(Jogar cruzadinha)
-        UC7(Ver progresso da cruzadinha)
-        UC8(Manter disciplina)
-        UC9(Responder solicitação de disciplina)
-        UCG(Gerar grade automaticamente)
-    end
-
-    P --- UC1
-    P --- UC2
-    P --- UC3
-    P --- UC4
-    A --- UC5
-    A --- UC6
-    A --- UC7
-    AD --- UC8
-    AD --- UC9
-    UC1 -. include .-> UCG
-    UC2 -. include .-> UCG
-```
+O diagrama (UC01–UC12) e a especificação de cada caso de uso, com fluxos
+principal, alternativos e de exceção, estão em [casos-de-uso.md](casos-de-uso.md).
+Onde cada regra é garantida e testada: [rastreabilidade.md](rastreabilidade.md).
 
 ## Situação por sprint
 

@@ -1,0 +1,13 @@
+{
+  "name": "gerador-manuais-docx",
+  "private": true,
+  "type": "module",
+  "description": "Gera os manuais .docx a partir do Markdown (diagramas Mermaid viram imagem).",
+  "scripts": {
+    "gerar": "node gerar.mjs"
+  },
+  "dependencies": {
+    "docx": "9.5.1",
+    "puppeteer-core": "23.11.1"
+  }
+}

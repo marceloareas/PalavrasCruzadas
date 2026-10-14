@@ -13,6 +13,8 @@ Scripts: [`backend/db/postgres/schema.sql`](../backend/db/postgres/schema.sql) �
 coleção Mongo criada com `$jsonSchema` em [`backend/src/db/mongo.js`](../backend/src/db/mongo.js) ·
 detalhes do Mongo em [`backend/db/mongo/modelo.md`](../backend/db/mongo/modelo.md).
 
+**Coluna por coluna, com diagrama de cada tabela:** [dicionario-de-dados.md](dicionario-de-dados.md).
+
 ## PostgreSQL
 
 ```mermaid
