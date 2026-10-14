@@ -48,6 +48,7 @@ responsável pela autenticação.
   - **completar a grade**: bônus de +10%.
 
   O tempo é medido pelo servidor. O ranking de cada cruzada usa a melhor partida de cada aluno; no empate, vence o menor tempo. Os valores ficam em `backend/src/regras.js` (`PONTUACAO`).
+- **RN20** *(nova)* — Durante a partida, o aluno pode usar a dica **revelar letra** até **3 vezes**. A dica preenche a primeira casa **vazia** da palavra selecionada; se não houver casa vazia, preenche a primeira ainda não revelada. A escolha nunca depende de a letra digitada estar certa. A letra revelada fica travada. Cada letra revelada tira **20%** dos pontos de **cada palavra que passa por aquela casa**. Os valores ficam em `backend/src/regras.js` (`DICAS`).
 
 ## Casos de uso
 
@@ -67,4 +68,5 @@ Onde cada regra é garantida e testada: [rastreabilidade.md](rastreabilidade.md)
 | Aluno pesquisar jogo | ✅ busca + página do jogo (sem respostas) |
 | Solicitação de disciplina → administrador | ✅ (estava como “futuro”) |
 | Aluno resolver o jogo, pontuação e ranking | ✅ (RN18/RN19), com resultados das partidas para o professor |
+| Dica "revelar letra" | ✅ (RN20) |
 | Login integrado ao Lúdica | ⏳ a definir — hoje o login é simulado |

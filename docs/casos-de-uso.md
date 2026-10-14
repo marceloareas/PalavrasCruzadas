@@ -65,7 +65,7 @@ flowchart LR
 | UC06 | Acompanhar resultados | Professor | `/professor`, `/professor/cruzadas/:id` | `GET /professor/cruzadas[/:id]` |
 | UC07 | Solicitar disciplina | Professor | `/professor/solicitacoes` | `POST /solicitacoes` |
 | UC08 | Pesquisar jogo | Aluno | `/jogos` | `GET /jogos` |
-| UC09 | Jogar cruzadinha | Aluno | `/jogos/:id` → `/partida/:id` | `POST /jogos/:id/sessoes`, `POST /sessoes/:id/conferir`, `POST /sessoes/:id/encerrar` |
+| UC09 | Jogar cruzadinha | Aluno | `/jogos/:id` → `/partida/:id` | `POST /jogos/:id/sessoes`, `POST /sessoes/:id/conferir`, `POST /sessoes/:id/dica`, `POST /sessoes/:id/encerrar` |
 | UC10 | Ver progresso e ranking | Aluno | `/jogos/:id`, resultado da partida | `GET /jogos/:id`, `GET /sessoes/:id` |
 | UC11 | Manter disciplina | Administrador | `/admin/disciplinas` | `GET/POST/PUT/DELETE /disciplinas` |
 | UC12 | Responder solicitação | Administrador | `/admin/solicitacoes` | `POST /solicitacoes/:id/responder` |
@@ -259,7 +259,7 @@ Ela some da busca dos alunos, e o histórico das partidas é preservado.
 | **Ator** | Aluno |
 | **Pré-condição** | Logado como aluno; jogo publicado |
 | **Pós-condição** | Partida encerrada com tempo, conferências, acertos, erros e pontuação gravados; ranking atualizado |
-| **RNs** | RN10, RN11, RN12, RN18, RN19 |
+| **RNs** | RN10, RN11, RN12, RN18, RN19, RN20 |
 
 **Fluxo principal**
 1. Na página do jogo (UC08), o aluno clica em **Jogar**.
@@ -275,11 +275,13 @@ Ela some da busca dos alunos, e o histórico das partidas é preservado.
 - **A2 — retomar:** se o aluno já tinha uma partida aberta naquela versão, o botão vira **Continuar partida** e a grade volta preenchida com a última conferência.
 - **A3 — jogar de novo:** no resultado, **Jogar de novo** inicia uma nova partida (RN10).
 - **A4 — o professor publicou nova versão durante a partida:** a partida em andamento continua na versão em que começou (RN09). Se o aluno sair e voltar pela página do jogo, começa uma partida nova na versão atual.
+- **A5 — revelar letra (RN20):** com uma palavra selecionada, o aluno clica em **💡 Revelar letra** e confirma. O sistema preenche a primeira casa vazia dessa palavra com a letra certa, que fica travada (destacada em amarelo), e diminui o contador de dicas. No resultado, cada letra revelada desconta 20% de cada palavra que passa por ela.
 
 **Exceções**
 - **E1** — jogo não publicado ou inexistente: 404.
 - **E2** — partida de outro aluno: 403.
-- **E3** — conferir ou encerrar uma partida já encerrada: 409.
+- **E3** — conferir, encerrar ou pedir dica numa partida já encerrada: 409.
+- **E4** — pedir uma 4ª dica, ou dica numa palavra com todas as letras já reveladas: 409.
 
 Detalhes da pontuação: [jogo-e-pontuacao.md](jogo-e-pontuacao.md).
 

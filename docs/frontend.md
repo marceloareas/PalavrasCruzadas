@@ -55,6 +55,7 @@ protótipo do Stitch (roxo `#6d4cf0`).
 - A palavra ativa só muda por **clique** (casa ou dica) ou pelas setas. O foco
   programático (`focus()`) não altera a seleção. Isso evita usar estado antigo
   dentro do `onFocus`.
+- **💡 Revelar letra** (RN20) chama `/sessoes/:id/dica` com o que está na tela para a palavra selecionada. A casa revelada entra no conjunto `reveladas`: fica amarela e `readOnly`, digitar só pula para a próxima e o Backspace não a apaga.
 - Ao conferir, cada palavra é montada a partir das casas dela
   (`{ indice: "TEXTO" }`) e enviada para `/sessoes/:id/conferir`.
 - `Cronometro` é só visual; o tempo que vale é o do servidor.

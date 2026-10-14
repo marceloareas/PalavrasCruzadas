@@ -84,6 +84,7 @@ npm test
 |---|---|
 | `test/gerador.test.js` | validação 5–15, dica, repetidas; grade sem conflito e sem sequências acidentais; determinismo; 15 palavras; palavra que não encaixa; matriz do aluno sem letras |
 | `test/pontuacao.test.js` | tentativa do acerto (inclusive "acertou, estragou, acertou"), pontos por tentativa, dificuldade, bônus de tempo e de completar, partida incompleta |
+| `test/dica.test.js` | dica revelar letra: escolha da casa (primeira vazia, sem indicar se está certa), casas já reveladas, cruzamentos, desconto de 20% |
 
 Os testes não precisam de banco. Fluxos com banco (API) foram testados ponta a
 ponta com scripts e com o navegador automatizado durante o desenvolvimento.
@@ -108,6 +109,7 @@ Passo a passo completo, backup/restauração e HTTPS:
 |---|---|
 | mudar o limite de palavras | `backend/src/regras.js` (`MIN_PALAVRAS`/`MAX_PALAVRAS`) **e** o `CHECK` de `versao_cruzada` em `schema.sql` |
 | mudar os pontos | `backend/src/regras.js` → `PONTUACAO` |
+| mudar o limite ou o custo das dicas | `backend/src/regras.js` → `DICAS` |
 | mudar o algoritmo da grade | `backend/src/services/gerador.js` (+ testes) |
 | adicionar uma rota | `backend/src/routes/*.js` → service em `backend/src/services/` |
 | adicionar uma tabela/coluna | `backend/db/postgres/schema.sql` + `docker compose down -v` |

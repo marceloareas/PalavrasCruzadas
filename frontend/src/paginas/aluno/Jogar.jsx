@@ -27,7 +27,7 @@ function Cronometro({ inicial }) {
   return <span className="cronometro">⏱ {formatarTempo(seg)}</span>;
 }
 
-function Tabuleiro({ sessao, letras, setLetras, ativa, setAtiva }) {
+function Tabuleiro({ sessao, letras, setLetras, ativa, setAtiva, reveladas }) {
   const refs = useRef(new Map());
   const palavras = useMemo(() => [...sessao.horizontais, ...sessao.verticais], [sessao]);
   const celulasPorPalavra = useMemo(() => new Map(palavras.map((p) => [p, celulasDa(p)])), [palavras]);
@@ -55,7 +55,8 @@ function Tabuleiro({ sessao, letras, setLetras, ativa, setAtiva }) {
   const aoDigitar = (k, valor) => {
     const letra = normalizarLetra(valor).slice(-1);
     if (!letra) return;
-    setLetras((atual) => ({ ...atual, [k]: letra }));
+    // Letra revelada por dica fica travada: so pula para a proxima casa.
+    if (!reveladas.has(k)) setLetras((atual) => ({ ...atual, [k]: letra }));
     mover(1);
   };
 
@@ -69,9 +70,9 @@ function Tabuleiro({ sessao, letras, setLetras, ativa, setAtiva }) {
       aoDigitar(k, e.key);
     } else if (e.key === 'Backspace') {
       e.preventDefault();
-      // Casa vazia: volta uma casa e apaga a anterior.
-      const alvo = letras[k] ? k : mover(-1);
-      if (alvo) setLetras((atual) => ({ ...atual, [alvo]: '' }));
+      // Casa vazia (ou revelada): volta uma casa e apaga a anterior.
+      const alvo = letras[k] && !reveladas.has(k) ? k : mover(-1);
+      if (alvo && !reveladas.has(alvo)) setLetras((atual) => ({ ...atual, [alvo]: '' }));
     } else if (setas[e.key]) {
       e.preventDefault();
       const [dl, dc] = setas[e.key];
@@ -98,12 +99,14 @@ function Tabuleiro({ sessao, letras, setLetras, ativa, setAtiva }) {
                 return (
                   <td
                     key={ci}
-                    className={`cel ${celulasAtivas.has(k) ? 'ativa' : ''} ${ativa.celula === k ? 'foco' : ''}`}
+                    className={`cel ${celulasAtivas.has(k) ? 'ativa' : ''} ${ativa.celula === k ? 'foco' : ''} ${reveladas.has(k) ? 'revelada' : ''}`}
+                    title={reveladas.has(k) ? 'Letra revelada por dica' : undefined}
                   >
                     {n && <span className="num">{n}</span>}
                     <input
                       ref={(el) => (el ? refs.current.set(k, el) : refs.current.delete(k))}
                       value={letras[k] ?? ''}
+                      readOnly={reveladas.has(k)}
                       aria-label={`Linha ${li + 1}, coluna ${ci + 1}`}
                       autoComplete="off"
                       autoCapitalize="characters"
@@ -171,6 +174,9 @@ function Resultado({ sessao, jogarDeNovo }) {
             {porTentativa.map(([t, qtd]) => (
               <tr key={t}><td>Acertadas na {t}ª tentativa</td><td>{qtd}</td></tr>
             ))}
+            {r.dicas_usadas > 0 && (
+              <tr><td>Letras reveladas por dica ({r.dicas_usadas})</td><td>−{r.desconto_dicas}</td></tr>
+            )}
             <tr><td>Pontos das palavras {r.multiplicador_dificuldade !== 1 && `(× ${r.multiplicador_dificuldade} pela dificuldade)`}</td><td>{r.pontos_palavras}</td></tr>
             <tr><td>Bônus de tempo</td><td>+{r.bonus_tempo}</td></tr>
             <tr><td>Bônus por completar</td><td>+{r.bonus_completa}</td></tr>
@@ -212,6 +218,7 @@ export default function Jogar() {
   const navegar = useNavigate();
   const [sessao, setSessao] = useState(null);
   const [letras, setLetras] = useState({});
+  const [reveladas, setReveladas] = useState(() => new Set()); // casas reveladas por dica (RN20)
   const [ativa, setAtiva] = useState({ celula: null, palavra: null });
   const [retorno, setRetorno] = useState(null);
   const [erro, setErro] = useState(null);
@@ -229,6 +236,9 @@ export default function Jogar() {
           if (texto[i]) preenchidas[k] = texto[i];
         });
       }
+      // Letras reveladas por dica valem por cima do que foi digitado.
+      for (const d of s.dicas ?? []) preenchidas[chave(d.linha, d.coluna)] = d.letra;
+      setReveladas(new Set((s.dicas ?? []).map((d) => chave(d.linha, d.coluna))));
       setLetras(preenchidas);
       const primeira = s.horizontais[0] ?? s.verticais[0];
       if (primeira) setAtiva({ celula: celulasDa(primeira)[0], palavra: primeira });
@@ -260,6 +270,29 @@ export default function Jogar() {
       setErro(e);
     } finally {
       setEnviando(false);
+    }
+  };
+
+  // RN20: revela a primeira casa vazia da palavra selecionada.
+  const revelarLetra = async () => {
+    const p = ativa.palavra;
+    if (!p) return;
+    const custo = Math.round(sessao.desconto_por_letra * 100);
+    const aviso =
+      `Revelar uma letra de ${p.numero} ${p.direcao === 'horizontal' ? '→' : '↓'}?\n\n` +
+      `Custa ${custo}% dos pontos de cada palavra que passa pela casa revelada. ` +
+      `Restam ${sessao.dicas_restantes} dica(s) nesta partida.`;
+    if (!confirm(aviso)) return;
+    setErro(null);
+    try {
+      const atual = celulasDa(p).map((k) => letras[k] || ' ').join('');
+      const r = await api.post(`/sessoes/${id}/dica`, { indice: p.indice, atual });
+      const k = chave(r.linha, r.coluna);
+      setLetras((l) => ({ ...l, [k]: r.letra }));
+      setReveladas((s) => new Set(s).add(k));
+      setSessao((s) => ({ ...s, dicas_restantes: r.dicas_restantes }));
+    } catch (e) {
+      setErro(e);
     }
   };
 
@@ -332,7 +365,14 @@ export default function Jogar() {
 
       <div className="detalhe-grid">
         <section className="card">
-          <Tabuleiro sessao={sessao} letras={letras} setLetras={setLetras} ativa={ativa} setAtiva={setAtiva} />
+          <Tabuleiro
+            sessao={sessao}
+            letras={letras}
+            setLetras={setLetras}
+            ativa={ativa}
+            setAtiva={setAtiva}
+            reveladas={reveladas}
+          />
           {ativa.palavra && (
             <p className="dica-ativa">
               <strong>{ativa.palavra.numero} {ativa.palavra.direcao === 'horizontal' ? '→' : '↓'}</strong>{' '}
@@ -342,6 +382,14 @@ export default function Jogar() {
           <div className="acoes">
             <button className="btn" onClick={conferir} disabled={enviando}>
               {enviando ? 'Conferindo…' : 'Conferir respostas'}
+            </button>
+            <button
+              className="btn btn-ghost"
+              onClick={revelarLetra}
+              disabled={!ativa.palavra || sessao.dicas_restantes === 0}
+              title={`Revela uma letra da palavra selecionada (custa ${Math.round(sessao.desconto_por_letra * 100)}% dos pontos dela)`}
+            >
+              💡 Revelar letra ({sessao.dicas_restantes})
             </button>
             <button className="btn btn-ghost perigo" onClick={encerrar}>Encerrar partida</button>
             <span className="muted small">{preenchidas}/{totalCelulas} casas preenchidas</span>

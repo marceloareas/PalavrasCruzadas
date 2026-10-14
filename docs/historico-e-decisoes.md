@@ -44,6 +44,7 @@ inicial (`Jogo de Palavras Cruzadas … (CEFET-RJ).docx`, v1) é guia, não regr
 |---|---|
 | Aluno jogar | Preenche a grade toda e confere; o sistema diz só quantas palavras estão certas (RN18) — [jogo-e-pontuacao.md](jogo-e-pontuacao.md) |
 | Pontuação | Pela tentativa do acerto, dificuldade, tempo e grade completa (RN19) |
+| Dica "revelar letra" | Até 3 por partida, com desconto na pontuação (RN20) |
 | Ranking e resultados | Ranking por cruzada; partidas dos alunos na tela do professor |
 
 ## Registro de decisões
@@ -66,6 +67,9 @@ inicial (`Jogo de Palavras Cruzadas … (CEFET-RJ).docx`, v1) é guia, não regr
 | D14 | Valores da pontuação (100/70/50/30, ×1/1,2/1,5, +20% tempo, +10% completa) | Proposta inicial, fácil de ajustar em `regras.js` | Validar com o grupo |
 | D15 | Ranking com a **melhor** partida de cada aluno, desempate por tempo | — | Validar com o grupo |
 | D16 | Tempo medido pelo **servidor** | O cronômetro do navegador pode ser manipulado | — |
+| D17 | Dica revela a primeira casa **vazia** da palavra (não a primeira errada) | Revelar a primeira errada diria de graça se a palavra está certa (quebraria a RN18) | — |
+| D18 | Letra revelada desconta de **todas** as palavras que passam pela casa | Uma letra num cruzamento ajuda as duas palavras | Validar com o grupo |
+| D19 | Até **3** dicas por partida, custo de **20%** por letra | Proposta inicial, ajustável em `regras.js` (`DICAS`) | Validar com o grupo |
 
 ## Pendências
 

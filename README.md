@@ -58,6 +58,7 @@ Mais detalhes (rodar sem Docker, testes, problemas comuns):
 - **Busca jogos** por texto, código de acesso, disciplina e dificuldade.
 - **Joga**: preenche a grade inteira e confere; o sistema diz **quantas**
   palavras estão certas (não quais). Confere quantas vezes quiser, até completar ou encerrar.
+- Pode usar até **3 dicas** por partida (**revelar letra**), que custam pontos.
 - Recebe **pontuação** pela tentativa em que acertou cada palavra, pela
   dificuldade e pelo tempo. Vê o gabarito no fim, o ranking e o histórico das
   próprias partidas. Pode jogar de novo.
@@ -192,6 +193,7 @@ encontra e joga → pontuação, ranking e resultados para o professor.
 - [x] Solicitação de disciplina (professor → administrador)
 - [x] Busca de jogos pelo aluno
 - [x] Resolução da cruzadinha, pontuação e ranking
+- [x] Dica "revelar letra"
 - [x] Resultados das partidas para o professor
 - [ ] Integração real com o Lúdica (autenticação)
 - [ ] Ambientes de homologação e produção
