@@ -111,15 +111,37 @@ PalavrasCruzadas/
 
 ## 📖 Documentação
 
+**Análise e modelagem**
+
 | Documento | Conteúdo |
 |---|---|
-| [Arquitetura](docs/arquitetura.md) | Serviços, camadas do back-end, os dois bancos e a consistência entre eles, autenticação provisória, como as respostas ficam protegidas, estrutura de pastas |
-| [Modelo de dados](docs/modelo-de-dados.md) | Diagrama ER do PostgreSQL, documento do MongoDB e o que mudou em relação ao modelo anterior |
-| [Regras de negócio e casos de uso](docs/regras-e-casos-de-uso.md) | RN01–RN19 e diagrama de casos de uso |
+| [Regras de negócio](docs/regras-e-casos-de-uso.md) | RN01–RN19, atores |
+| [Casos de uso](docs/casos-de-uso.md) | Diagrama UC01–UC12 e especificação de cada um (pré/pós-condição, fluxo principal, alternativos, exceções) |
+| [Diagramas](docs/diagramas.md) | Modelo de domínio (classes), estados (cruzada, partida, solicitação, disciplina), sequência dos fluxos principais, navegação entre telas |
+| [Matriz CRUD](docs/matriz-crud.md) | Entidade × perfil, entidade × caso de uso, operação × rota |
+| [Rastreabilidade](docs/rastreabilidade.md) | Cada RN → caso de uso, banco, API, tela e teste |
+
+**Dados**
+
+| Documento | Conteúdo |
+|---|---|
+| [Modelo de dados](docs/modelo-de-dados.md) | Diagrama ER do PostgreSQL, documento do MongoDB, por que dois bancos, o que mudou em relação ao modelo anterior |
+| [Dicionário de dados](docs/dicionario-de-dados.md) | Tabela por tabela (e a coleção do Mongo): diagrama das relações, colunas, tipos, restrições, índices, domínios |
+
+**Técnica**
+
+| Documento | Conteúdo |
+|---|---|
+| [Arquitetura](docs/arquitetura.md) | Serviços, camadas do back-end, consistência entre os dois bancos, autenticação provisória, proteção das respostas, estrutura de pastas |
 | [API](docs/api.md) | Todas as rotas, com corpos e respostas |
 | [Gerador de grade](docs/gerador-de-grade.md) | Como o sistema monta a cruzadinha a partir das respostas |
 | [Jogo e pontuação](docs/jogo-e-pontuacao.md) | Fluxo da partida, o que é registrado, fórmula de pontos, ranking |
 | [Front-end](docs/frontend.md) | Telas por perfil, componentes, detalhes da tela de jogo |
+
+**Projeto**
+
+| Documento | Conteúdo |
+|---|---|
 | [Guia de desenvolvimento](docs/desenvolvimento.md) | Rodar, testar, usuários de teste, onde mexer, problemas comuns, fluxo de Git |
 | [Histórico e decisões](docs/historico-e-decisoes.md) | O que cada sprint pediu e como foi atendido, decisões tomadas e pendências |
 
