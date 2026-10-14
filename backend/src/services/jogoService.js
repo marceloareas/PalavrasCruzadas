@@ -103,7 +103,8 @@ export async function rankingDaCruzada(idCruzada, limite = 10) {
     `SELECT * FROM (
         SELECT DISTINCT ON (s.id_aluno)
                s.id_aluno, u.nome, u.usertag, s.pontuacao::float AS pontuacao, s.tempo,
-               s.acertos, s.tentativas, v.qtd_palavras, v.numero_versao, s.fim
+               s.acertos, s.tentativas, v.qtd_palavras, v.numero_versao, s.fim,
+               (SELECT COUNT(*)::int FROM dica_sessao d WHERE d.id_sessao = s.id_sessao) AS dicas
           FROM sessao_jogo s
           JOIN versao_cruzada v ON v.id_versao = s.id_versao
           JOIN usuario u        ON u.id_usuario = s.id_aluno
@@ -128,7 +129,8 @@ export async function obterJogoParaAluno(idCruzada, idAluno) {
 
   const { rows: sessoes } = await pool.query(
     `SELECT s.id_sessao, s.id_versao, v.numero_versao, s.inicio, s.fim, s.tempo,
-            s.tentativas, s.acertos, s.erros, s.pontuacao::float AS pontuacao, v.qtd_palavras
+            s.tentativas, s.acertos, s.erros, s.pontuacao::float AS pontuacao, v.qtd_palavras,
+            (SELECT COUNT(*)::int FROM dica_sessao d WHERE d.id_sessao = s.id_sessao) AS dicas
        FROM sessao_jogo s
        JOIN versao_cruzada v ON v.id_versao = s.id_versao
       WHERE v.id_cruzada = $1 AND s.id_aluno = $2
@@ -158,7 +160,8 @@ export async function obterJogoParaAluno(idCruzada, idAluno) {
 export async function partidasDaCruzada(idCruzada) {
   const { rows } = await pool.query(
     `SELECT s.id_sessao, u.nome, u.usertag, v.numero_versao, s.fim, s.tempo, s.tentativas,
-            s.acertos, s.erros, v.qtd_palavras, s.pontuacao::float AS pontuacao
+            s.acertos, s.erros, v.qtd_palavras, s.pontuacao::float AS pontuacao,
+            (SELECT COUNT(*)::int FROM dica_sessao d WHERE d.id_sessao = s.id_sessao) AS dicas
        FROM sessao_jogo s
        JOIN versao_cruzada v ON v.id_versao = s.id_versao
        JOIN usuario u        ON u.id_usuario = s.id_aluno

@@ -28,6 +28,7 @@ erDiagram
     palavra_cruzada ||--|{ versao_cruzada : "tem versões"
     versao_cruzada ||--o{ sessao_jogo : "é jogada em"
     sessao_jogo ||--o{ resposta_sessao : "registra"
+    sessao_jogo ||--o{ dica_sessao : "revela letras (RN20)"
 
     usuario {
         serial id_usuario PK
@@ -99,6 +100,15 @@ erDiagram
         boolean correta
         int numero_tentativa
     }
+    dica_sessao {
+        serial id_dica PK
+        int id_sessao FK
+        int indice_palavra "1..15"
+        int linha
+        int coluna
+        char letra
+        timestamp data_dica
+    }
 ```
 
 ## MongoDB — coleção `conteudo_versao`
@@ -131,3 +141,4 @@ erDiagram
 | `resposta_sessao.id_palavra` → FK `palavra` | `indice_palavra` | a palavra agora mora no Mongo; como a versão é imutável, o índice nunca fica inválido |
 | relação palavra ↔ resposta_sessao marcada 1:1 | 1:N | uma palavra recebe várias respostas |
 | `pontuacao NUMERIC(5,2)` | `NUMERIC(7,2)` | 5,2 só vai até 999,99 |
+| — | tabela `dica_sessao` | letras reveladas pela dica, que descontam pontos (RN20) |

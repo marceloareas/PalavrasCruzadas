@@ -21,7 +21,7 @@ npm run dev                          # http://localhost:3000/api
 ## Testes
 
 ```bash
-npm test      # gerador de grade + pontuação (não precisam de banco)
+npm test      # gerador de grade, pontuação e dica (não precisam de banco)
 ```
 
 ## Organização
@@ -37,7 +37,7 @@ src/seedExemplos.js      4 cruzadas + 3 partidas de exemplo
 src/middleware/auth.js   sessão e papéis (ponto de integração com o Lúdica)
 src/routes/              auth · cruzadas (professor, aluno, partida) · disciplinas
 src/services/            cruzada, jogo, sessão, disciplina, usuário, gerador, pontuação
-test/                    gerador.test.js, pontuacao.test.js
+test/                    gerador.test.js, pontuacao.test.js, dica.test.js
 ```
 
 ## Documentação

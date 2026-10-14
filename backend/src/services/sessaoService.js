@@ -15,6 +15,8 @@ import { obterCabecalho, obterConteudo } from './cruzadaService.js';
 import { montarTabuleiro } from './jogoService.js';
 import { normalizarResposta, montarMatriz } from './gerador.js';
 import { tentativaDoAcerto, calcularPontuacao } from './pontuacao.js';
+import { escolherCasa, reveladasPorPalavra } from './dica.js';
+import { DICAS } from '../regras.js';
 import { naoEncontrado, proibido, conflito, validacao } from './erros.js';
 
 /**
@@ -70,13 +72,26 @@ async function historico(executor, idSessao) {
   return rows;
 }
 
+// Letras reveladas por dica (RN20), na ordem em que foram pedidas.
+async function dicasDaSessao(executor, idSessao) {
+  const { rows } = await executor.query(
+    `SELECT indice_palavra, linha, coluna, letra
+       FROM dica_sessao WHERE id_sessao = $1 ORDER BY id_dica`,
+    [idSessao]
+  );
+  return rows;
+}
+
 // Calcula o resultado a partir do historico (mesma regra na hora de
 // finalizar e ao reabrir uma partida ja encerrada).
-function resultado(sessao, conteudo, linhas, dificuldade) {
+function resultado(sessao, conteudo, linhas, dificuldade, dicas) {
   const porPalavra = new Map(conteudo.palavras.map((p) => [p.indice, []]));
   for (const l of linhas) porPalavra.get(l.indice_palavra)?.push(l.correta);
   const acertos = conteudo.palavras.map((p) => tentativaDoAcerto(porPalavra.get(p.indice)));
-  return calcularPontuacao({ acertos, dificuldade, tempo: sessao.tempo });
+  const reveladas = reveladasPorPalavra(conteudo.palavras, dicas);
+  const r = calcularPontuacao({ acertos, dificuldade, tempo: sessao.tempo, reveladas });
+  r.detalhe.dicas_usadas = dicas.length;
+  return r;
 }
 
 function resumoTentativas(linhas) {
@@ -92,10 +107,11 @@ function resumoTentativas(linhas) {
 /** Estado da partida. Gabarito e pontuacao so depois de encerrada (RN11). */
 export async function obterSessao(idSessao, idAluno) {
   const sessao = await carregarSessao(pool, idSessao, idAluno);
-  const [cab, conteudo, linhas] = await Promise.all([
+  const [cab, conteudo, linhas, dicas] = await Promise.all([
     obterCabecalho(sessao.id_cruzada),
     obterConteudo(sessao.id_versao),
-    historico(pool, idSessao)
+    historico(pool, idSessao),
+    dicasDaSessao(pool, idSessao)
   ]);
 
   // Ultimas respostas enviadas, para retomar a grade preenchida.
@@ -115,6 +131,10 @@ export async function obterSessao(idSessao, idAluno) {
     encerrada,
     tentativas: resumoTentativas(linhas),
     ultimas_respostas: Object.fromEntries(ultima.map((l) => [l.indice_palavra, l.resposta_informada])),
+    // RN20: letras ja reveladas (o aluno pediu) e quantas dicas ainda pode usar.
+    dicas: dicas.map(({ linha, coluna, letra }) => ({ linha, coluna, letra })),
+    dicas_restantes: Math.max(0, DICAS.maxPorPartida - dicas.length),
+    desconto_por_letra: DICAS.descontoPorLetra,
     ...montarTabuleiro(conteudo)
   };
   if (!encerrada) return base;
@@ -124,7 +144,7 @@ export async function obterSessao(idSessao, idAluno) {
     ...base,
     pontuacao: sessao.pontuacao,
     tempo: sessao.tempo,
-    resultado: resultado(sessao, conteudo, linhas, cab.dificuldade).detalhe,
+    resultado: resultado(sessao, conteudo, linhas, cab.dificuldade, dicas).detalhe,
     gabarito: {
       matriz: montarMatriz({ linhas: conteudo.grade.linhas, colunas: conteudo.grade.colunas, palavras: conteudo.palavras }),
       palavras: conteudo.palavras.map((p) => ({
@@ -147,7 +167,8 @@ async function finalizar(client, sessao, conteudo, dificuldade) {
     [sessao.id_sessao]
   );
   const linhas = await historico(client, sessao.id_sessao);
-  const r = resultado({ ...sessao, tempo }, conteudo, linhas, dificuldade);
+  const dicas = await dicasDaSessao(client, sessao.id_sessao);
+  const r = resultado({ ...sessao, tempo }, conteudo, linhas, dificuldade, dicas);
   await client.query(
     `UPDATE sessao_jogo
         SET fim = CURRENT_TIMESTAMP, tempo = $1, acertos = $2, pontuacao = $3
@@ -195,6 +216,37 @@ export async function conferir(idSessao, idAluno, respostas) {
     const concluida = certas === total;
     if (concluida) await finalizar(client, { ...sessao, tentativas: tentativa }, conteudo, cab.dificuldade);
     return { tentativa, certas, total, concluida };
+  });
+}
+
+/**
+ * RN20 - Revela uma letra da palavra `indice`. `atual` e o que o aluno tem na
+ * tela para essa palavra (' ' = casa vazia): a dica preenche a primeira casa
+ * vazia, sem nunca indicar se o que ja foi digitado esta certo.
+ */
+export async function revelarLetra(idSessao, idAluno, { indice, atual } = {}) {
+  return withTransaction(async (client) => {
+    const sessao = await carregarSessao(client, idSessao, idAluno, { bloquear: true });
+    if (sessao.fim) throw conflito('Esta partida já foi encerrada.');
+
+    const dicas = await dicasDaSessao(client, idSessao);
+    if (dicas.length >= DICAS.maxPorPartida) {
+      throw conflito(`Você já usou as ${DICAS.maxPorPartida} dicas desta partida.`);
+    }
+    const conteudo = await obterConteudo(sessao.id_versao);
+    const palavra = conteudo.palavras.find((p) => p.indice === Number(indice));
+    if (!palavra) throw validacao(['Escolha uma palavra da grade para revelar uma letra.']);
+
+    const reveladas = new Set(dicas.map((d) => `${d.linha},${d.coluna}`));
+    const casa = escolherCasa(palavra, atual, reveladas);
+    if (!casa) throw conflito('Todas as letras desta palavra já foram reveladas.');
+
+    await client.query(
+      `INSERT INTO dica_sessao (id_sessao, indice_palavra, linha, coluna, letra)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [idSessao, palavra.indice, casa.linha, casa.coluna, casa.letra]
+    );
+    return { ...casa, dicas_restantes: DICAS.maxPorPartida - dicas.length - 1 };
   });
 }
 

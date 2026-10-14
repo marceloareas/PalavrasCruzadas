@@ -10,7 +10,7 @@ import {
   excluirCruzada
 } from '../services/cruzadaService.js';
 import { buscarJogos, obterJogoParaAluno, rankingDaCruzada, partidasDaCruzada } from '../services/jogoService.js';
-import { iniciarSessao, obterSessao, conferir, encerrar } from '../services/sessaoService.js';
+import { iniciarSessao, obterSessao, conferir, encerrar, revelarLetra } from '../services/sessaoService.js';
 import { naoEncontrado, proibido } from '../services/erros.js';
 
 const router = Router();
@@ -80,6 +80,11 @@ router.get('/sessoes/:id', aluno, async (req, res) => {
 
 router.post('/sessoes/:id/conferir', aluno, async (req, res) => {
   res.json(await conferir(id(req), req.usuario.id_usuario, req.body?.respostas));
+});
+
+// RN20: revela uma letra da palavra escolhida. Corpo: { indice, atual }.
+router.post('/sessoes/:id/dica', aluno, async (req, res) => {
+  res.json(await revelarLetra(id(req), req.usuario.id_usuario, req.body ?? {}));
 });
 
 router.post('/sessoes/:id/encerrar', aluno, async (req, res) => {

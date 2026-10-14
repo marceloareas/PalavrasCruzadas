@@ -71,7 +71,7 @@ export default function DetalheJogo() {
           <div className="tabela-scroll">
             <table className="tabela">
               <thead>
-                <tr><th>Data</th><th>Versão</th><th>Tempo</th><th>Conferências</th><th>Certas</th><th>Pontos</th></tr>
+                <tr><th>Data</th><th>Versão</th><th>Tempo</th><th>Conferências</th><th>Dicas</th><th>Certas</th><th>Pontos</th></tr>
               </thead>
               <tbody>
                 {j.minhas_sessoes.map((s) => (
@@ -80,6 +80,7 @@ export default function DetalheJogo() {
                     <td>v{s.numero_versao}</td>
                     <td>{formatarTempo(s.tempo)}</td>
                     <td>{s.tentativas}</td>
+                    <td>{s.dicas}</td>
                     <td>{s.acertos}/{s.qtd_palavras}</td>
                     <td><strong>{s.pontuacao}</strong></td>
                   </tr>

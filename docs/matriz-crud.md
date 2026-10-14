@@ -17,6 +17,7 @@ por perfil e por caso de uso. As entidades são as tabelas do
 | `conteudo_versao` (Mongo) | **C R**⁷ (D em cascata) | R⁸ | — | — |
 | `sessao_jogo` | R⁹ | **C R U**¹⁰ | — | — |
 | `resposta_sessao` | R⁹ (agregado) | **C R**¹¹ | — | — |
+| `dica_sessao` | R⁹ (contagem) | **C R**¹² | — | — |
 
 1. Só o próprio usuário (`/auth/eu`). A lista completa existe só na tela de login simulado.
 2. Excluir com jogos vira **desativar** (U em `ativa`) — RN15.
@@ -35,8 +36,8 @@ Isso preserva o histórico (RN09/RN12).
 
 ## Entidade × caso de uso
 
-| UC | usuario | disciplina | solicitação | palavra_cruzada | versao_cruzada | conteudo_versao | sessao_jogo | resposta_sessao |
-|---|---|---|---|---|---|---|---|---|
+| UC | usuario | disciplina | solicitação | palavra_cruzada | versao_cruzada | conteudo_versao | sessao_jogo | resposta_sessao | dica_sessao |
+|---|---|---|---|---|---|---|---|---|---|
 | UC01 Entrar | **C R U** | | | | | | | |
 | UC02 Criar cruzadinha | R | R | | **C** | **C** | **C** | | |
 | UC03 Gerar grade | | | | | | (monta o C) | | |
@@ -45,8 +46,8 @@ Isso preserva o histórico (RN09/RN12).
 | UC06 Acompanhar resultados | R | R | | R | R | R | R | R (agregado) |
 | UC07 Solicitar disciplina | R | | **C R** | | | | | |
 | UC08 Pesquisar jogo | R | R | | R | R | R (sem respostas) | R | |
-| UC09 Jogar cruzadinha | R | R | | R | R | R | **C R U** | **C R** |
-| UC10 Ver progresso e ranking | R | | | R | R | | R | |
+| UC09 Jogar cruzadinha | R | R | | R | R | R | **C R U** | **C R** | **C R** |
+| UC10 Ver progresso e ranking | R | | | R | R | | R | | R (contagem) |
 | UC11 Manter disciplina | | **C R U D** | | R (conta jogos) | | | | |
 | UC12 Responder solicitação | R | **C** | **R U** | | | | | |
 
@@ -65,3 +66,4 @@ são imutáveis de propósito.
 | `versao_cruzada` + `conteudo_versao` | `POST` / `PUT /professor/cruzadas[/:id]` | os mesmos `GET` acima, `GET /sessoes/:id` | — | junto com a cruzada |
 | `sessao_jogo` | `POST /jogos/:id/sessoes` | `GET /sessoes/:id`, `GET /jogos/:id` | `POST /sessoes/:id/conferir`, `POST /sessoes/:id/encerrar` | — |
 | `resposta_sessao` | `POST /sessoes/:id/conferir` | `GET /sessoes/:id` (encerrada) | — | — |
+| `dica_sessao` | `POST /sessoes/:id/dica` | `GET /sessoes/:id`, ranking e partidas (contagem) | — | — |

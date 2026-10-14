@@ -16,6 +16,7 @@
 --   id, usertag, email, papel   -> por isso nao ha coluna de senha.
 -- ============================================================================
 
+DROP TABLE IF EXISTS dica_sessao            CASCADE;
 DROP TABLE IF EXISTS resposta_sessao        CASCADE;
 DROP TABLE IF EXISTS sessao_jogo            CASCADE;
 DROP TABLE IF EXISTS versao_cruzada         CASCADE;
@@ -147,6 +148,23 @@ CREATE TABLE resposta_sessao (
     resposta_informada VARCHAR(100) NOT NULL,
     correta            BOOLEAN      NOT NULL,
     numero_tentativa   INTEGER      NOT NULL DEFAULT 1
+);
+
+-- ---------------------------------------------------------------------------
+-- dica_sessao  (letras reveladas pelo aluno durante a partida)
+-- RN20 - Dica "revelar letra": no maximo N por partida; cada letra revelada
+--        desconta pontos de cada palavra que passa pela casa (linha, coluna).
+-- ---------------------------------------------------------------------------
+CREATE TABLE dica_sessao (
+    id_dica        SERIAL    PRIMARY KEY,
+    id_sessao      INTEGER   NOT NULL REFERENCES sessao_jogo(id_sessao)
+                             ON DELETE CASCADE,
+    indice_palavra INTEGER   NOT NULL CHECK (indice_palavra BETWEEN 1 AND 15),
+    linha          INTEGER   NOT NULL CHECK (linha  >= 1),
+    coluna         INTEGER   NOT NULL CHECK (coluna >= 1),
+    letra          CHAR(1)   NOT NULL,
+    data_dica      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (id_sessao, linha, coluna)
 );
 
 -- ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 **Projeto:** Cruzadinha Digital — Jogo de Palavras Cruzadas para Ciência da Computação (CEFET-RJ)
 **Disciplina:** Projeto e Construção de Sistemas
-**Versão do documento:** 1.0 — outubro de 2026
+**Versão do documento:** 1.1 — outubro de 2026
 
 ## 1. Apresentação
 
@@ -23,7 +23,7 @@ e informa o seu perfil.
 | Perfil | Pode |
 |---|---|
 | **Professor** | Criar, editar, publicar, arquivar e excluir as próprias cruzadinhas; ver o gabarito, o ranking e as partidas dos alunos; solicitar disciplinas novas |
-| **Aluno** | Pesquisar jogos publicados; jogar quantas vezes quiser; ver pontuação, gabarito (após jogar), ranking e histórico |
+| **Aluno** | Pesquisar jogos publicados; jogar quantas vezes quiser; usar até 3 dicas (revelar letra) por partida; ver pontuação, gabarito (após jogar), ranking e histórico |
 | **Administrador** | Criar, editar, desativar e excluir disciplinas; aprovar ou recusar as solicitações dos professores |
 
 ```mermaid
@@ -193,7 +193,7 @@ No jogo, abaixo da grade:
 | Conferências | Quantas vezes o aluno conferiu as respostas |
 | Erros | Soma das palavras erradas em todas as conferências |
 | Tempo | Do início ao fim da partida |
-| Pontos | Pontuação final (seção 4.5) |
+| Pontos | Pontuação final (seção 4.6) |
 
 ### 3.6 Solicitar uma disciplina nova
 
@@ -263,7 +263,7 @@ Ao conferir, o sistema diz **quantas** palavras estão certas, **mas não quais*
 ![Resultado da conferência](img/u14-partida-conferida.png)
 
 - Revise e confira de novo quantas vezes quiser. A lista **Conferências** mostra o resultado de cada tentativa.
-- Quanto antes você acertar cada palavra, mais pontos ela vale (seção 4.5).
+- Quanto antes você acertar cada palavra, mais pontos ela vale (seção 4.6).
 - A partida **termina sozinha** quando todas as palavras estiverem certas.
 - **Encerrar partida** termina antes: vale o que estava certo na **última conferência**.
 - Se sair da tela no meio, a partida fica guardada: na página do jogo aparece **Continuar partida**.
@@ -275,6 +275,8 @@ flowchart TD
     C -- Sim --> D[Grade volta preenchida<br/>com a última conferência]
     C -- Não --> E[Nova partida: grade vazia<br/>e cronômetro]
     D --> F[Preencher as palavras]
+    F -. opcional .-> Q[Revelar letra<br/>até 3 por partida]
+    Q --> F
     E --> F
     F --> G[Conferir respostas]
     G --> H["Sistema informa:<br/>X de N palavras certas"]
@@ -310,7 +312,26 @@ sequenceDiagram
     T-->>A: mostra pontos e ranking
 ```
 
-### 4.5 Resultado e pontuação
+### 4.5 Dica: revelar letra
+
+Travou numa palavra? Use a dica **💡 Revelar letra**:
+
+1. Selecione a palavra (clique numa casa dela ou na dica da lista).
+2. Clique em **💡 Revelar letra (N)**. O número entre parênteses é quantas dicas ainda restam.
+3. Confirme. O sistema preenche a **primeira casa vazia** dessa palavra com a letra certa.
+
+![Dica: letras reveladas](img/u17-dica.png)
+
+| Regra | Como funciona |
+|---|---|
+| Quantas | Até **3 dicas** por partida |
+| Qual casa | A primeira casa **vazia** da palavra; se estiver toda preenchida, a primeira ainda não revelada. A dica nunca indica se o que você digitou está certo |
+| Letra revelada | Fica com **fundo amarelo** e **travada**: não dá para apagar nem digitar por cima |
+| Custo | Cada letra revelada tira **20%** dos pontos de **cada palavra que passa por aquela casa**. Num cruzamento, desconta das duas palavras |
+
+Se você sair e continuar a partida depois, as letras reveladas continuam na grade.
+
+### 4.6 Resultado e pontuação
 
 ![Resultado da partida](img/u15-resultado.png)
 
@@ -336,6 +357,10 @@ conforme o tempo passa (zera em 1 minuto por palavra).
 
 **4. Bônus por completar:** **+10%** se todas as palavras ficarem certas.
 
+**5. Desconto das dicas:** cada letra revelada tira **20%** dos pontos de cada palavra que passa por ela (seção 4.5). O resultado mostra o desconto numa linha própria:
+
+![Resultado com dicas](img/u18-resultado-dica.png)
+
 > **Exemplo:** jogo fácil com 8 palavras; 3 acertadas na 1ª conferência e 5 na
 > 2ª → 3 × 100 + 5 × 70 = **650**; completou rápido → bônus de tempo **+129** e
 > de completar **+65** → **844 pontos**.
@@ -343,7 +368,7 @@ conforme o tempo passa (zera em 1 minuto por palavra).
 O resultado também mostra o **gabarito** e, para cada palavra, se você acertou
 e o que digitou. As respostas só aparecem **depois** de a partida terminar.
 
-### 4.6 Ranking e minhas partidas
+### 4.7 Ranking e minhas partidas
 
 Na página do jogo:
 
@@ -414,6 +439,7 @@ flowchart TD
 | RN17 | O aluno só encontra jogos publicados |
 | RN18 | O aluno preenche a grade e confere; o sistema informa quantas palavras estão certas, sem dizer quais |
 | RN19 | A pontuação considera em qual conferência cada palavra foi acertada, a dificuldade, o tempo e se a grade foi completada |
+| RN20 | O aluno pode revelar até 3 letras por partida; cada letra revelada desconta 20% de cada palavra que passa por ela |
 
 ## 7. Perguntas frequentes
 
@@ -430,6 +456,10 @@ Sim. O ranking considera a sua **melhor** partida.
 
 Não. Abra o jogo de novo e clique em **Continuar partida**. Mas atenção: o
 tempo continua contando.
+
+#### Posso pedir ajuda numa palavra?
+
+Sim: selecione a palavra e use **💡 Revelar letra** (até 3 por partida). Cada letra revelada custa pontos (seção 4.5).
 
 #### Por que o sistema não diz quais palavras estão erradas?
 
