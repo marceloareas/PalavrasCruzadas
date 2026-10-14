@@ -67,6 +67,33 @@ export function Grade({ matriz, numeros = [] }) {
   );
 }
 
+// Ranking da cruzada (melhor partida de cada aluno).
+export function Ranking({ linhas, destacar }) {
+  if (!linhas?.length) return <p className="muted">Ninguém terminou esta cruzada ainda.</p>;
+  const medalha = ['🥇', '🥈', '🥉'];
+  return (
+    <div className="tabela-scroll">
+      <table className="tabela">
+        <thead>
+          <tr><th>#</th><th>Aluno</th><th>Pontos</th><th>Certas</th><th>Conferências</th><th>Tempo</th></tr>
+        </thead>
+        <tbody>
+          {linhas.map((r) => (
+            <tr key={r.id_aluno} className={r.id_aluno === destacar ? 'destaque' : ''}>
+              <td>{medalha[r.posicao - 1] ?? r.posicao}</td>
+              <td>{r.nome} <span className="muted">@{r.usertag}</span></td>
+              <td><strong>{r.pontuacao}</strong></td>
+              <td>{r.acertos}/{r.qtd_palavras}</td>
+              <td>{r.tentativas}</td>
+              <td>{formatarTempo(r.tempo)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // Lista de dicas separada em horizontais / verticais.
 export function ListaDicas({ horizontais, verticais, mostrarResposta = false }) {
   const bloco = (titulo, lista) => (

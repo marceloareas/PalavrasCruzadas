@@ -4,7 +4,8 @@
 // grade e gravacao no PostgreSQL + MongoDB.
 // ============================================================================
 import { pool } from './db/postgres.js';
-import { criarCruzada } from './services/cruzadaService.js';
+import { criarCruzada, obterConteudo } from './services/cruzadaService.js';
+import { calcularPontuacao } from './services/pontuacao.js';
 
 const EXEMPLOS = [
   {
@@ -76,10 +77,13 @@ const EXEMPLOS = [
   }
 ];
 
+// Partidas de exemplo no 1o jogo: em que tentativa cada palavra foi
+// acertada (null = terminou errada) e o tempo em segundos. Pontuacao e
+// historico de respostas saem da mesma regra do jogo.
 const SESSOES = [
-  ['aluno.bruno', 272, 4, 6, 1, 920],
-  ['aluno.duda', 230, 3, 7, 0, 980],
-  ['aluno.rafa', 312, 5, 5, 2, 870]
+  ['aluno.bruno', 272, [1, 1, 1, 2, 2, 3, null]],
+  ['aluno.duda', 230, [1, 1, 1, 1, 1, 1, 2]],
+  ['aluno.rafa', 312, [1, 1, 2, 2, 3, null, null]]
 ];
 
 export async function criarExemplosSeVazio() {
@@ -110,13 +114,31 @@ export async function criarExemplosSeVazio() {
 
   // Algumas partidas no 1o jogo, para o painel do professor nao ficar zerado.
   if (primeira) {
-    for (const [usertag, tempo, tentativas, acertos, erros, pontuacao] of SESSOES) {
+    const { palavras } = await obterConteudo(primeira.idVersao);
+    for (const [usertag, tempo, acertos] of SESSOES) {
       if (!idUsuario[usertag]) continue;
-      await pool.query(
-        `INSERT INTO sessao_jogo (id_versao, id_aluno, fim, tempo, tentativas, acertos, erros, pontuacao)
-         VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4, $5, $6, $7)`,
-        [primeira.idVersao, idUsuario[usertag], tempo, tentativas, acertos, erros, pontuacao]
+      const tentativas = Math.max(...acertos.map((a) => a ?? 1));
+      const { pontuacao, detalhe } = calcularPontuacao({ acertos, dificuldade: EXEMPLOS[0].dificuldade, tempo });
+      const { rows: [s] } = await pool.query(
+        `INSERT INTO sessao_jogo (id_versao, id_aluno, inicio, fim, tempo, tentativas, acertos, pontuacao)
+         VALUES ($1, $2, CURRENT_TIMESTAMP - make_interval(secs => $3), CURRENT_TIMESTAMP, $3, $4, $5, $6)
+         RETURNING id_sessao`,
+        [primeira.idVersao, idUsuario[usertag], tempo, tentativas, detalhe.certas, pontuacao]
       );
+      let erros = 0;
+      for (let n = 1; n <= tentativas; n++) {
+        for (const p of palavras) {
+          const a = acertos[p.indice - 1];
+          const correta = a !== null && n >= a;
+          if (!correta) erros++;
+          await pool.query(
+            `INSERT INTO resposta_sessao (id_sessao, indice_palavra, resposta_informada, correta, numero_tentativa)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [s.id_sessao, p.indice, correta ? p.resposta : '', correta, n]
+          );
+        }
+      }
+      await pool.query('UPDATE sessao_jogo SET erros = $1 WHERE id_sessao = $2', [erros, s.id_sessao]);
     }
   }
   console.log(`Seed: ${EXEMPLOS.length} cruzadas de exemplo criadas.`);

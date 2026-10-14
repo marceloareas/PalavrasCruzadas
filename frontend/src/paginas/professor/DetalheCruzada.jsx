@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api.js';
 import {
-  Aviso, Erro, Grade, ListaDicas, PillDificuldade, PillStatus, formatarData
+  Aviso, Erro, Grade, ListaDicas, PillDificuldade, PillStatus, Ranking, formatarData, formatarTempo
 } from '../../componentes/comuns.jsx';
 
 export default function DetalheCruzada() {
@@ -65,6 +65,40 @@ export default function DetalheCruzada() {
           />
         </section>
       </div>
+
+      <section className="card">
+        <h3>Ranking</h3>
+        <Ranking linhas={c.ranking} />
+      </section>
+
+      <section className="card">
+        <h3>Partidas dos alunos</h3>
+        {c.partidas.length === 0 ? (
+          <p className="muted">Nenhuma partida terminada ainda.</p>
+        ) : (
+          <div className="tabela-scroll">
+            <table className="tabela">
+              <thead>
+                <tr><th>Aluno</th><th>Data</th><th>Versão</th><th>Certas</th><th>Conferências</th><th>Erros</th><th>Tempo</th><th>Pontos</th></tr>
+              </thead>
+              <tbody>
+                {c.partidas.map((p) => (
+                  <tr key={p.id_sessao}>
+                    <td>{p.nome} <span className="muted">@{p.usertag}</span></td>
+                    <td>{formatarData(p.fim)}</td>
+                    <td>v{p.numero_versao}</td>
+                    <td>{p.acertos}/{p.qtd_palavras}</td>
+                    <td>{p.tentativas}</td>
+                    <td>{p.erros}</td>
+                    <td>{formatarTempo(p.tempo)}</td>
+                    <td><strong>{p.pontuacao}</strong></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <section className="card versoes">
         <h3>Histórico de versões (RN09)</h3>
