@@ -46,10 +46,11 @@ export async function buscarJogos({ texto, idDisciplina, dificuldade, codigo, id
             v.qtd_palavras,
             (SELECT COUNT(*)::int FROM sessao_jogo s
                JOIN versao_cruzada vv ON vv.id_versao = s.id_versao
-              WHERE vv.id_cruzada = pc.id_cruzada) AS partidas,
+              WHERE vv.id_cruzada = pc.id_cruzada AND s.fim IS NOT NULL) AS partidas,
             (SELECT COUNT(*)::int FROM sessao_jogo s
                JOIN versao_cruzada vv ON vv.id_versao = s.id_versao
-              WHERE vv.id_cruzada = pc.id_cruzada AND s.id_aluno = $1) AS minhas_partidas
+              WHERE vv.id_cruzada = pc.id_cruzada AND s.id_aluno = $1
+                AND s.fim IS NOT NULL) AS minhas_partidas
        FROM palavra_cruzada pc
        JOIN disciplina d ON d.id_disciplina = pc.id_disciplina
        JOIN usuario u    ON u.id_usuario   = pc.id_autor
@@ -65,15 +66,11 @@ export async function buscarJogos({ texto, idDisciplina, dificuldade, codigo, id
   return rows;
 }
 
-/** Jogo publicado na versao atual, sem respostas (RN11). */
-export async function obterJogoParaAluno(idCruzada, idAluno) {
-  const cab = await obterCabecalho(idCruzada);
-  if (!cab || cab.status !== 'publicado' || !cab.versao_atual) {
-    throw naoEncontrado('Jogo não encontrado ou não publicado.');
-  }
-  const conteudo = await obterConteudo(cab.versao_atual.id_versao);
-  if (!conteudo) throw naoEncontrado('Conteúdo do jogo indisponível.');
-
+/**
+ * Tabuleiro sem respostas (RN11): grade vazia, numeros e dicas com
+ * posicao e tamanho de cada palavra.
+ */
+export function montarTabuleiro(conteudo) {
   const dicas = conteudo.palavras
     .map((p) => ({
       indice: p.indice,
@@ -86,14 +83,60 @@ export async function obterJogoParaAluno(idCruzada, idAluno) {
     }))
     .sort((a, b) => a.numero - b.numero);
 
-  const { rows: minhasSessoes } = await pool.query(
-    `SELECT s.id_sessao, v.numero_versao, s.inicio, s.fim, s.tempo, s.acertos, s.erros, s.pontuacao
+  return {
+    grade: montarMatriz(
+      { linhas: conteudo.grade.linhas, colunas: conteudo.grade.colunas, palavras: conteudo.palavras },
+      { ocultarLetras: true }
+    ),
+    numeros: dicas.map(({ numero, linha, coluna }) => ({ numero, linha, coluna })),
+    horizontais: dicas.filter((d) => d.direcao === 'horizontal'),
+    verticais: dicas.filter((d) => d.direcao === 'vertical')
+  };
+}
+
+/**
+ * Ranking de uma cruzada: melhor partida finalizada de cada aluno,
+ * ordenada por pontuacao e, no empate, pelo menor tempo (RN12).
+ */
+export async function rankingDaCruzada(idCruzada, limite = 10) {
+  const { rows } = await pool.query(
+    `SELECT * FROM (
+        SELECT DISTINCT ON (s.id_aluno)
+               s.id_aluno, u.nome, u.usertag, s.pontuacao::float AS pontuacao, s.tempo,
+               s.acertos, s.tentativas, v.qtd_palavras, v.numero_versao, s.fim
+          FROM sessao_jogo s
+          JOIN versao_cruzada v ON v.id_versao = s.id_versao
+          JOIN usuario u        ON u.id_usuario = s.id_aluno
+         WHERE v.id_cruzada = $1 AND s.fim IS NOT NULL
+         ORDER BY s.id_aluno, s.pontuacao DESC, s.tempo ASC
+     ) melhores
+     ORDER BY pontuacao DESC, tempo ASC
+     LIMIT $2`,
+    [idCruzada, limite]
+  );
+  return rows.map((r, i) => ({ posicao: i + 1, ...r }));
+}
+
+/** Jogo publicado na versao atual, sem respostas (RN11). */
+export async function obterJogoParaAluno(idCruzada, idAluno) {
+  const cab = await obterCabecalho(idCruzada);
+  if (!cab || cab.status !== 'publicado' || !cab.versao_atual) {
+    throw naoEncontrado('Jogo não encontrado ou não publicado.');
+  }
+  const conteudo = await obterConteudo(cab.versao_atual.id_versao);
+  if (!conteudo) throw naoEncontrado('Conteúdo do jogo indisponível.');
+
+  const { rows: sessoes } = await pool.query(
+    `SELECT s.id_sessao, s.id_versao, v.numero_versao, s.inicio, s.fim, s.tempo,
+            s.tentativas, s.acertos, s.erros, s.pontuacao::float AS pontuacao, v.qtd_palavras
        FROM sessao_jogo s
        JOIN versao_cruzada v ON v.id_versao = s.id_versao
       WHERE v.id_cruzada = $1 AND s.id_aluno = $2
       ORDER BY s.inicio DESC`,
     [idCruzada, idAluno]
   );
+  // Partida em andamento na versao atual (para "continuar").
+  const aberta = sessoes.find((s) => !s.fim && s.id_versao === cab.versao_atual.id_versao);
 
   return {
     id_cruzada: cab.id_cruzada,
@@ -104,13 +147,25 @@ export async function obterJogoParaAluno(idCruzada, idAluno) {
     disciplina: cab.disciplina,
     autor_nome: cab.autor_nome,
     versao: cab.versao_atual.numero_versao,
-    grade: montarMatriz(
-      { linhas: conteudo.grade.linhas, colunas: conteudo.grade.colunas, palavras: conteudo.palavras },
-      { ocultarLetras: true }
-    ),
-    numeros: dicas.map(({ numero, linha, coluna }) => ({ numero, linha, coluna })),
-    horizontais: dicas.filter((d) => d.direcao === 'horizontal'),
-    verticais: dicas.filter((d) => d.direcao === 'vertical'),
-    minhas_sessoes: minhasSessoes
+    ...montarTabuleiro(conteudo),
+    sessao_aberta: aberta?.id_sessao ?? null,
+    minhas_sessoes: sessoes.filter((s) => s.fim),
+    ranking: await rankingDaCruzada(idCruzada)
   };
+}
+
+/** Todas as partidas encerradas de uma cruzada (visao do professor). */
+export async function partidasDaCruzada(idCruzada) {
+  const { rows } = await pool.query(
+    `SELECT s.id_sessao, u.nome, u.usertag, v.numero_versao, s.fim, s.tempo, s.tentativas,
+            s.acertos, s.erros, v.qtd_palavras, s.pontuacao::float AS pontuacao
+       FROM sessao_jogo s
+       JOIN versao_cruzada v ON v.id_versao = s.id_versao
+       JOIN usuario u        ON u.id_usuario = s.id_aluno
+      WHERE v.id_cruzada = $1 AND s.fim IS NOT NULL
+      ORDER BY s.fim DESC
+      LIMIT 100`,
+    [idCruzada]
+  );
+  return rows;
 }

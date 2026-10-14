@@ -271,7 +271,7 @@ test: adiciona testes para geração da cruzadinha
 | Perfil | O que já funciona |
 |---|---|
 | Professor | criar, editar (com versões) e excluir/arquivar jogos cadastrando **só respostas e dicas** — a grade é gerada automaticamente; solicitar disciplina nova |
-| Aluno | pesquisar jogos publicados por texto, código, disciplina e dificuldade; ver o tabuleiro e as dicas (sem respostas) e o histórico de partidas |
+| Aluno | pesquisar jogos publicados por texto, código, disciplina e dificuldade; jogar (preenche a grade, confere e vê quantas palavras acertou); pontuação, ranking e histórico de partidas |
 | Administrador | manter disciplinas; aprovar/recusar solicitações dos professores |
 
 O login ainda é **simulado** (“entrar como” um usuário de teste ou enviar o payload do Lúdica), porque a autenticação será feita pelo Lúdica e essa integração ainda não está definida.
@@ -286,7 +286,7 @@ Documentação:
 
 ## 🚧 Status do Projeto
 
-**Em desenvolvimento.** Próxima etapa: o aluno resolver a cruzadinha, com registro de tempo, tentativas, acertos/erros, pontuação e ranking (RN10–RN12 — as tabelas já existem).
+**Em desenvolvimento.** O fluxo completo já funciona: o professor cria, o aluno encontra e joga, e o professor vê os resultados. Pendente: integração real com o Lúdica.
 
 ---
 
@@ -324,8 +324,8 @@ Para desenvolver o front com recarga automática: `cd frontend && npm install &&
 * [x] Algoritmo de geração da cruzadinha;
 * [x] Perfil administrador e manutenção de disciplinas;
 * [x] Busca de jogos pelo aluno;
-* [ ] Experiência de jogo do aluno (resolver a cruzadinha);
-* [ ] Pontuação e ranking;
-* [ ] Resultados para professores;
+* [x] Experiência de jogo do aluno (resolver a cruzadinha);
+* [x] Pontuação e ranking;
+* [x] Resultados para professores;
 * [ ] Integração real com a Lúdica (autenticação);
 * [ ] Ambientes de homologação e produção.

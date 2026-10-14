@@ -44,7 +44,9 @@ src/
   services/
     gerador.js          geração automática da grade (RN06/RN13/RN14)
     cruzadaService.js   CRUD do professor, versões, gravação Postgres + Mongo
-    jogoService.js      busca e jogo do aluno, sem respostas (RN11)
+    jogoService.js      busca, tabuleiro sem respostas (RN11) e ranking
+    sessaoService.js    partida: iniciar, conferir, encerrar (RN10/RN12/RN18)
+    pontuacao.js        cálculo dos pontos (RN19), valores em regras.js
     disciplinaService.js  Manter Disciplina + solicitações (RN15/RN16)
     usuarioService.js   upsert do usuário vindo do Lúdica
   routes/               auth, disciplinas, cruzadas
@@ -64,7 +66,11 @@ test/gerador.test.js
 | POST | `/api/professor/cruzadas` | professor | cria: `{ titulo, descricao, id_disciplina, dificuldade, status, palavras: [{ resposta, dica }] }` |
 | GET / PUT / DELETE | `/api/professor/cruzadas/:id` | professor autor | detalhe com gabarito / edita (nova versão se as palavras mudarem) / exclui |
 | GET | `/api/jogos?texto=&codigo=&disciplina=&dificuldade=` | aluno | busca jogos publicados |
-| GET | `/api/jogos/:id` | aluno | grade vazia + dicas, sem respostas |
+| GET | `/api/jogos/:id` | aluno | grade vazia + dicas (sem respostas), ranking e minhas partidas |
+| POST | `/api/jogos/:id/sessoes` | aluno | inicia uma partida (ou retoma a que está aberta) |
+| GET | `/api/sessoes/:id` | aluno dono | estado da partida; gabarito e pontuação só depois de encerrada |
+| POST | `/api/sessoes/:id/conferir` | aluno dono | `{ respostas: { indice: "PALAVRA" } }` → `{ tentativa, certas, total, concluida }` |
+| POST | `/api/sessoes/:id/encerrar` | aluno dono | encerra e pontua com a última conferência |
 | GET | `/api/disciplinas` (`?todas=1` p/ admin) | logado | lista disciplinas |
 | POST / PUT / DELETE | `/api/disciplinas[/:id]` | administrador | Manter Disciplina |
 | GET / POST | `/api/solicitacoes` | professor / admin | professor cria e vê as suas; admin vê todas |

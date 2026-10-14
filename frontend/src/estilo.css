@@ -186,3 +186,35 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); bor
   .stat-row { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
   .topuser { margin-left: 0; }
 }
+
+/* Partida */
+.cronometro { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.2rem; color: var(--brand-ink); background: var(--brand-soft); padding: 8px 14px; border-radius: 12px; }
+.grade-jogo td.cel { padding: 0; cursor: text; }
+.grade-jogo td.cel input {
+  width: 100%; height: 100%; border: none; background: transparent; padding: 0;
+  text-align: center; font-weight: 800; font-size: 1rem; color: var(--ink);
+  text-transform: uppercase; caret-color: transparent; cursor: pointer; border-radius: 4px;
+}
+.grade-jogo td.cel input:focus { outline: none; }
+.grade-jogo td.cel.ativa { background: var(--brand-soft); }
+.grade-jogo td.cel.foco { background: #d9cffc; border-color: var(--brand); }
+.dica-ativa { background: #f7f6fd; border-radius: 10px; padding: 10px 12px; margin: 12px 0; }
+.dicas-jogo li { cursor: pointer; border-radius: 6px; padding: 2px 6px; }
+.dicas-jogo li:hover { background: #f7f6fd; }
+.dicas-jogo li.ativa { background: var(--brand-soft); font-weight: 600; }
+.historico { margin: 0; padding-left: 18px; color: var(--muted); }
+
+/* Resultado */
+.resultado { text-align: center; }
+.resultado.completa { border-color: #86efac; }
+.placar { font-size: 3rem; font-weight: 900; color: var(--brand-ink); line-height: 1.1; }
+.placar small { font-size: 1rem; color: var(--muted); font-weight: 600; }
+.tabela-pontos { max-width: 420px; margin: 14px auto; text-align: left; }
+.tabela-pontos td:last-child { text-align: right; font-weight: 700; }
+.tabela-pontos tr.total td { font-size: 1.05rem; color: var(--brand-ink); }
+.resultado .acoes { justify-content: center; }
+.lista-respostas { list-style: none; margin: 0; padding: 0; }
+.lista-respostas li { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.lista-respostas li.certa > span:first-child { color: var(--ok); }
+.lista-respostas li.errada > span:first-child { color: var(--erro); }
+.tabela tr.destaque td { background: var(--brand-soft); }

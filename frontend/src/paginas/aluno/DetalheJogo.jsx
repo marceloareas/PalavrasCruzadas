@@ -1,12 +1,15 @@
-// Detalhe de um jogo para o aluno: grade vazia + dicas, sem respostas (RN11).
+// Detalhe de um jogo para o aluno: grade vazia + dicas, sem respostas (RN11),
+// ranking e historico das proprias partidas.
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api.js';
-import { Erro, Grade, ListaDicas, PillDificuldade, formatarData, formatarTempo } from '../../componentes/comuns.jsx';
+import { useSessao } from '../../Sessao.jsx';
+import { Erro, Grade, ListaDicas, PillDificuldade, Ranking, formatarData, formatarTempo } from '../../componentes/comuns.jsx';
 
 export default function DetalheJogo() {
   const { id } = useParams();
   const navegar = useNavigate();
+  const { usuario } = useSessao();
   const [j, setJ] = useState(null);
   const [erro, setErro] = useState(null);
 
@@ -14,11 +17,22 @@ export default function DetalheJogo() {
     api.get(`/jogos/${id}`).then(setJ).catch(setErro);
   }, [id]);
 
+  // RN10: pode jogar quantas vezes quiser; se houver partida aberta, continua.
+  const jogar = async () => {
+    try {
+      const r = await api.post(`/jogos/${id}/sessoes`);
+      navegar(`/partida/${r.id_sessao}`);
+    } catch (e) {
+      setErro(e);
+    }
+  };
+
   if (!j) return erro ? <Erro erro={erro} /> : <p className="muted">Carregando…</p>;
 
   return (
     <>
-      <p><button className="link" onClick={() => navegar(-1)}>← Voltar à busca</button></p>
+      <p><button className="link" onClick={() => navegar(-1)}>← Voltar</button></p>
+      <Erro erro={erro} />
       <div className="page-head">
         <div>
           <p className="eyebrow">{j.disciplina}</p>
@@ -28,8 +42,8 @@ export default function DetalheJogo() {
             <span className="muted">Prof. {j.autor_nome}</span>
           </p>
         </div>
-        <button className="btn" disabled title="A resolução do jogo entra na próxima sprint">
-          ▶ Jogar (em breve)
+        <button className="btn" onClick={jogar}>
+          {j.sessao_aberta ? '▶ Continuar partida' : j.minhas_sessoes.length ? '↻ Jogar de novo' : '▶ Jogar'}
         </button>
       </div>
       {j.descricao && <p>{j.descricao}</p>}
@@ -44,28 +58,35 @@ export default function DetalheJogo() {
         </section>
       </div>
 
-      <section className="card versoes">
+      <section className="card">
+        <h3>Ranking</h3>
+        <Ranking linhas={j.ranking} destacar={usuario?.id_usuario} />
+      </section>
+
+      <section className="card">
         <h3>Minhas partidas</h3>
         {j.minhas_sessoes.length === 0 ? (
-          <p className="muted">Você ainda não jogou esta cruzada.</p>
+          <p className="muted">Você ainda não terminou nenhuma partida desta cruzada.</p>
         ) : (
-          <table className="tabela">
-            <thead>
-              <tr><th>Data</th><th>Versão</th><th>Tempo</th><th>Acertos</th><th>Erros</th><th>Pontos</th></tr>
-            </thead>
-            <tbody>
-              {j.minhas_sessoes.map((s) => (
-                <tr key={s.id_sessao}>
-                  <td>{formatarData(s.inicio)}</td>
-                  <td>v{s.numero_versao}</td>
-                  <td>{formatarTempo(s.tempo)}</td>
-                  <td>{s.acertos}</td>
-                  <td>{s.erros}</td>
-                  <td>{Number(s.pontuacao)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="tabela-scroll">
+            <table className="tabela">
+              <thead>
+                <tr><th>Data</th><th>Versão</th><th>Tempo</th><th>Conferências</th><th>Certas</th><th>Pontos</th></tr>
+              </thead>
+              <tbody>
+                {j.minhas_sessoes.map((s) => (
+                  <tr key={s.id_sessao}>
+                    <td>{formatarData(s.fim)}</td>
+                    <td>v{s.numero_versao}</td>
+                    <td>{formatarTempo(s.tempo)}</td>
+                    <td>{s.tentativas}</td>
+                    <td>{s.acertos}/{s.qtd_palavras}</td>
+                    <td><strong>{s.pontuacao}</strong></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </>
