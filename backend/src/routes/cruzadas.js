@@ -9,7 +9,8 @@ import {
   editarCruzada,
   excluirCruzada
 } from '../services/cruzadaService.js';
-import { buscarJogos, obterJogoParaAluno } from '../services/jogoService.js';
+import { buscarJogos, obterJogoParaAluno, rankingDaCruzada, partidasDaCruzada } from '../services/jogoService.js';
+import { iniciarSessao, obterSessao, conferir, encerrar } from '../services/sessaoService.js';
 import { naoEncontrado, proibido } from '../services/erros.js';
 
 const router = Router();
@@ -35,7 +36,11 @@ router.get('/professor/cruzadas/:id', professor, async (req, res) => {
   const cruzada = await obterCruzada(id(req));
   if (!cruzada) throw naoEncontrado('Cruzada não encontrada.');
   if (cruzada.id_autor !== req.usuario.id_usuario) throw proibido('Esta cruzada é de outro professor.');
-  res.json(cruzada);
+  const [ranking, partidas] = await Promise.all([
+    rankingDaCruzada(cruzada.id_cruzada),
+    partidasDaCruzada(cruzada.id_cruzada)
+  ]);
+  res.json({ ...cruzada, ranking, partidas });
 });
 
 router.put('/professor/cruzadas/:id', professor, async (req, res) => {
@@ -62,6 +67,23 @@ router.get('/jogos', aluno, async (req, res) => {
 
 router.get('/jogos/:id', aluno, async (req, res) => {
   res.json(await obterJogoParaAluno(id(req), req.usuario.id_usuario));
+});
+
+// --- Partida do aluno (RN10/RN11/RN12) ---------------------------------------
+router.post('/jogos/:id/sessoes', aluno, async (req, res) => {
+  res.status(201).json(await iniciarSessao(id(req), req.usuario.id_usuario));
+});
+
+router.get('/sessoes/:id', aluno, async (req, res) => {
+  res.json(await obterSessao(id(req), req.usuario.id_usuario));
+});
+
+router.post('/sessoes/:id/conferir', aluno, async (req, res) => {
+  res.json(await conferir(id(req), req.usuario.id_usuario, req.body?.respostas));
+});
+
+router.post('/sessoes/:id/encerrar', aluno, async (req, res) => {
+  res.json(await encerrar(id(req), req.usuario.id_usuario));
 });
 
 export default router;

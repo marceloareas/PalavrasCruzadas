@@ -18,10 +18,10 @@ export async function listarCruzadasDoAutor(idAutor) {
             v.numero_versao AS versao_atual, v.qtd_palavras,
             (SELECT COUNT(*)::int FROM sessao_jogo s
                JOIN versao_cruzada vv ON vv.id_versao = s.id_versao
-              WHERE vv.id_cruzada = pc.id_cruzada) AS resolucoes,
+              WHERE vv.id_cruzada = pc.id_cruzada AND s.fim IS NOT NULL) AS resolucoes,
             (SELECT ROUND(AVG(s.tempo))::int FROM sessao_jogo s
                JOIN versao_cruzada vv ON vv.id_versao = s.id_versao
-              WHERE vv.id_cruzada = pc.id_cruzada) AS tempo_medio
+              WHERE vv.id_cruzada = pc.id_cruzada AND s.fim IS NOT NULL) AS tempo_medio
        FROM palavra_cruzada pc
        JOIN disciplina d ON d.id_disciplina = pc.id_disciplina
        LEFT JOIN LATERAL (
@@ -43,12 +43,12 @@ export async function estatisticasDoAutor(idAutor) {
            FROM sessao_jogo s
            JOIN versao_cruzada v ON v.id_versao = s.id_versao
            JOIN palavra_cruzada pc ON pc.id_cruzada = v.id_cruzada
-          WHERE pc.id_autor = $1) AS alunos_ativos,
+          WHERE pc.id_autor = $1 AND s.fim IS NOT NULL) AS alunos_ativos,
         (SELECT ROUND(100.0 * SUM(s.acertos) / NULLIF(SUM(s.acertos + s.erros), 0))::int
            FROM sessao_jogo s
            JOIN versao_cruzada v ON v.id_versao = s.id_versao
            JOIN palavra_cruzada pc ON pc.id_cruzada = v.id_cruzada
-          WHERE pc.id_autor = $1) AS media_acertos`,
+          WHERE pc.id_autor = $1 AND s.fim IS NOT NULL) AS media_acertos`,
     [idAutor]
   );
   return rows[0];

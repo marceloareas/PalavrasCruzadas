@@ -14,6 +14,7 @@ import Disciplinas from './paginas/admin/Disciplinas.jsx';
 import Solicitacoes from './paginas/admin/Solicitacoes.jsx';
 import BuscarJogos from './paginas/aluno/BuscarJogos.jsx';
 import DetalheJogo from './paginas/aluno/DetalheJogo.jsx';
+import Jogar from './paginas/aluno/Jogar.jsx';
 
 function Inicio() {
   const { usuario } = useSessao();
@@ -43,6 +44,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
             <Route path="jogos" element={so(['aluno'], <BuscarJogos />)} />
             <Route path="jogos/:id" element={so(['aluno'], <DetalheJogo />)} />
+            <Route path="partida/:id" element={so(['aluno'], <Jogar />)} />
 
             <Route path="*" element={<Inicio />} />
           </Route>
