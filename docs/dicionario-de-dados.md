@@ -23,6 +23,7 @@ flowchart LR
         versao_cruzada
         sessao_jogo
         resposta_sessao
+        dica_sessao
     end
     subgraph MG["MongoDB — banco palavras_cruzadas"]
         conteudo_versao[(conteudo_versao)]
@@ -36,6 +37,7 @@ flowchart LR
     palavra_cruzada --> versao_cruzada
     versao_cruzada --> sessao_jogo
     sessao_jogo --> resposta_sessao
+    sessao_jogo --> dica_sessao
     versao_cruzada ==>|"id_versao (1:1)"| conteudo_versao
     resposta_sessao -.->|"indice_palavra → palavras[].indice"| conteudo_versao
 ```
@@ -50,6 +52,7 @@ flowchart LR
 | `conteudo_versao` | **MongoDB** | Conteúdo | 1 documento por versão |
 | `sessao_jogo` | Postgres | Jogo | 1 por partida |
 | `resposta_sessao` | Postgres | Jogo | palavras × conferências, por partida |
+| `dica_sessao` | Postgres | Jogo | até 3 por partida |
 
 ---
 
@@ -254,6 +257,33 @@ erDiagram
 
 ---
 
+## `dica_sessao`
+
+Cada letra revelada pela dica **revelar letra** durante uma partida (**RN20**).
+
+```mermaid
+erDiagram
+    sessao_jogo ||--o{ dica_sessao : "id_sessao (CASCADE)"
+    dica_sessao }o--|| conteudo_versao : "indice_palavra → palavras[].indice"
+```
+
+| Coluna | Tipo | Obrig. | Padrão | Restrições | Descrição |
+|---|---|---|---|---|---|
+| `id_dica` | SERIAL | ✔ | auto | PK | |
+| `id_sessao` | INTEGER | ✔ | | FK → `sessao_jogo` `ON DELETE CASCADE` | |
+| `indice_palavra` | INTEGER | ✔ | | `CHECK BETWEEN 1 AND 15` | Palavra em que o aluno pediu a dica |
+| `linha` | INTEGER | ✔ | | `CHECK >= 1` | Casa revelada |
+| `coluna` | INTEGER | ✔ | | `CHECK >= 1` | |
+| `letra` | CHAR(1) | ✔ | | | Letra revelada |
+| `data_dica` | TIMESTAMP | ✔ | `CURRENT_TIMESTAMP` | | |
+
+**Restrição composta:** `UNIQUE (id_sessao, linha, coluna)`: a mesma casa não é revelada duas vezes.
+**Limite:** no máximo 3 linhas por sessão (`DICAS.maxPorPartida`), garantido pela API.
+**Desconto:** a casa `(linha, coluna)` desconta de **cada palavra que passa por ela** (`reveladasPorPalavra` em `services/dica.js`).
+**Usado por:** `sessaoService` (`revelarLetra`, estado e resultado da partida), `jogoService` (contagem de dicas no ranking e nas partidas).
+
+---
+
 ## MongoDB — coleção `conteudo_versao`
 
 Conteúdo de cada versão: as palavras com resposta, dica e posição gerada, e o
@@ -330,6 +360,7 @@ atualizado, e apagado com `deleteMany({ id_cruzada })` quando a cruzada é exclu
 | Usuário único no Lúdica | `UNIQUE` em `id_ludica`, `usertag`, `email` |
 | Número de versão não se repete na mesma cruzada | `UNIQUE (id_cruzada, numero_versao)` |
 | Código de acesso e de disciplina únicos | `UNIQUE` |
+| Mesma casa não é revelada duas vezes na partida | `UNIQUE (id_sessao, linha, coluna)` em `dica_sessao` |
 | Partidas não são apagadas por engano | `sessao_jogo.id_versao` **sem** cascade: o banco impede apagar uma versão já jogada |
 
 As demais regras (permissões, geração da grade, pontuação…) ficam na API. Ver

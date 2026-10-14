@@ -35,3 +35,14 @@ export const PONTUACAO = {
   // Bonus por completar a grade inteira.
   bonusCompleta: 0.1
 };
+
+// ---------------------------------------------------------------------------
+// RN20 - Dica "revelar letra" durante a partida. A logica esta em
+// services/dica.js e o desconto e aplicado em services/pontuacao.js.
+// ---------------------------------------------------------------------------
+export const DICAS = {
+  maxPorPartida: 3,
+  // Cada letra revelada tira 20% dos pontos de CADA palavra que passa por
+  // aquela casa (uma letra num cruzamento desconta das duas palavras).
+  descontoPorLetra: 0.2
+};

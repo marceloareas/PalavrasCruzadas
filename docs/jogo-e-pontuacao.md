@@ -36,6 +36,35 @@ stateDiagram-v2
     Encerrada --> [*]: pontuação + gabarito
 ```
 
+## Dica: revelar letra (RN20)
+
+Código: [`dica.js`](../backend/src/services/dica.js) (lógica pura),
+`revelarLetra` em [`sessaoService.js`](../backend/src/services/sessaoService.js),
+configuração `DICAS` em [`regras.js`](../backend/src/regras.js) ·
+testes: [`dica.test.js`](../backend/test/dica.test.js)
+
+1. Com uma palavra selecionada, o aluno clica em **💡 Revelar letra (N)** e confirma o custo.
+2. O navegador envia `{ indice, atual }`: o índice da palavra e o que está na tela para ela (`' '` = casa vazia).
+3. O servidor escolhe a casa:
+   - a primeira casa **vazia** da palavra que ainda não foi revelada;
+   - se a palavra estiver toda preenchida, a primeira casa ainda não revelada.
+
+   A escolha **nunca depende de a letra digitada estar certa**. Se dependesse, pedir dica numa palavra preenchida mostraria de graça se ela está correta, o que quebraria a regra de só informar a contagem (RN18).
+4. A letra volta, entra na grade **travada** (fundo amarelo; digitar ou apagar não a altera) e fica gravada em `dica_sessao`. Ao retomar a partida, ela continua lá.
+
+| Regra | Valor (`DICAS` em `regras.js`) |
+|---|---|
+| Dicas por partida | 3 |
+| Custo | 20% dos pontos de **cada palavra que passa pela casa revelada** |
+
+O custo vale para todas as palavras que passam pela casa: uma letra num
+cruzamento desconta das duas palavras, porque ajuda as duas. Com 5 letras
+reveladas, uma palavra deixa de valer pontos.
+
+Erros: 409 ao pedir a 4ª dica, numa palavra com todas as letras já reveladas
+ou numa partida encerrada; 422 se a palavra não existir; 403 em partida de
+outro aluno.
+
 ## O que é registrado (RN12)
 
 | Onde | O quê |
@@ -47,6 +76,7 @@ stateDiagram-v2
 | `sessao_jogo.erros` | **soma** das palavras erradas em todas as conferências |
 | `sessao_jogo.pontuacao` | pontos finais |
 | `resposta_sessao` | uma linha por palavra por conferência: `indice_palavra`, `resposta_informada`, `correta`, `numero_tentativa` |
+| `dica_sessao` | uma linha por letra revelada: `indice_palavra`, `linha`, `coluna`, `letra` (RN20) |
 
 Partidas abertas (`fim IS NULL`) não entram no ranking nem nas estatísticas do professor.
 
@@ -78,14 +108,18 @@ Fácil ×1 · Médio ×1,2 · Difícil ×1,5, aplicado aos pontos das palavras.
 Até **+20%** dos pontos das palavras, caindo em linha reta até zero quando o
 tempo chega a **60 s por palavra** (8 palavras = 8 minutos).
 
-### 4. Bônus por completar
+### 4. Desconto das dicas (RN20)
+
+Cada letra revelada tira **20%** dos pontos de cada palavra que passa por ela (seção anterior).
+
+### 5. Bônus por completar
 
 **+10%** dos pontos das palavras se todas terminaram certas.
 
 ### Fórmula
 
 ```
-pontos_palavras = Σ (100 × fator_da_tentativa) × multiplicador_dificuldade
+pontos_palavras = Σ (100 × fator_da_tentativa × (1 − 0,2 × letras_reveladas_na_palavra)) × multiplicador_dificuldade
 bonus_tempo     = completa ? pontos_palavras × 0,20 × max(0, 1 − tempo / (palavras × 60)) : 0
 bonus_completa  = completa ? pontos_palavras × 0,10 : 0
 total           = arredonda(pontos_palavras + bonus_tempo + bonus_completa)
@@ -122,7 +156,7 @@ O painel mostra jogos criados, alunos que jogaram e média de acertos
 
 ## Ideias ainda não implementadas ("outros fatores")
 
-- Penalidade por pedir ajuda (revelar uma letra ou uma palavra).
+- Outros tipos de dica: verificar se uma palavra está certa, revelar a palavra inteira, dica extra do professor.
 - Peso maior para palavras mais longas.
 - Bônus de sequência (várias palavras de primeira).
 - Pontuar no ranking só a **primeira** partida, ou reduzir os pontos das

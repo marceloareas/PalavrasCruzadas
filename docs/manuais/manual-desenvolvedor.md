@@ -3,7 +3,7 @@
 **Projeto:** Cruzadinha Digital — Jogo de Palavras Cruzadas para Ciência da Computação (CEFET-RJ)
 **Disciplina:** Projeto e Construção de Sistemas
 **Repositório:** https://github.com/marceloareas/PalavrasCruzadas (branch `dev`)
-**Versão do documento:** 1.0 — outubro de 2026
+**Versão do documento:** 1.1 — outubro de 2026
 
 ## 1. Introdução
 
@@ -234,12 +234,13 @@ npm install
 npm test
 ```
 
-São 14 testes, que não precisam de banco:
+São 20 testes, que não precisam de banco:
 
 | Arquivo | O que verifica |
 |---|---|
 | `test/gerador.test.js` | Limite de 5 a 15 palavras, dica obrigatória, resposta repetida; grade sem conflitos e sem "palavras acidentais"; mesma entrada gera a mesma grade; 15 palavras encaixam; palavra sem letra em comum é apontada; a grade do aluno não revela letras |
 | `test/pontuacao.test.js` | Tentativa do acerto (inclusive "acertou, errou e acertou de novo"), pontos por tentativa, multiplicador de dificuldade, bônus de tempo e de grade completa |
+| `test/dica.test.js` | Dica "revelar letra": escolhe a primeira casa vazia, não depende de a letra digitada estar certa, pula casas já reveladas, letra num cruzamento conta para as duas palavras, desconto de 20% por letra |
 
 ## 4. Estrutura do código
 
@@ -286,6 +287,7 @@ PalavrasCruzadas/
 |---|---|
 | Mudar o limite de palavras | `backend/src/regras.js` e o `CHECK` de `versao_cruzada` em `schema.sql` |
 | Mudar a pontuação | `backend/src/regras.js` → `PONTUACAO` |
+| Mudar o limite ou o custo das dicas | `backend/src/regras.js` → `DICAS` |
 | Mudar o algoritmo da grade | `backend/src/services/gerador.js` (e os testes) |
 | Nova rota da API | `backend/src/routes/*.js` + service em `backend/src/services/` |
 | Nova tabela ou coluna | `backend/db/postgres/schema.sql` + `docker compose down -v` |
@@ -307,7 +309,7 @@ mesmo `id_versao`.
 
 ### 5.2 Modelo lógico — PostgreSQL
 
-**Visão geral** das sete tabelas e dos relacionamentos:
+**Visão geral** das oito tabelas e dos relacionamentos:
 
 ```mermaid
 erDiagram
@@ -319,6 +321,7 @@ erDiagram
     palavra_cruzada ||--|{ versao_cruzada : "tem versões"
     versao_cruzada ||--o{ sessao_jogo : "é jogada em"
     sessao_jogo ||--o{ resposta_sessao : "registra"
+    sessao_jogo ||--o{ dica_sessao : "revela letras"
 ```
 
 **Cadastro e conteúdo** (usuários, disciplinas, solicitações, cruzadas e versões):
@@ -383,13 +386,14 @@ erDiagram
     }
 ```
 
-**Jogo** (partidas e respostas; `usuario` e `versao_cruzada` aparecem só com a chave):
+**Jogo** (partidas, respostas e dicas; `usuario` e `versao_cruzada` aparecem só com a chave):
 
 ```mermaid
 erDiagram
     usuario ||--o{ sessao_jogo : "id_aluno"
     versao_cruzada ||--o{ sessao_jogo : "id_versao"
     sessao_jogo ||--o{ resposta_sessao : "id_sessao"
+    sessao_jogo ||--o{ dica_sessao : "id_sessao"
 
     usuario {
         serial id_usuario PK
@@ -417,6 +421,15 @@ erDiagram
         boolean correta
         int numero_tentativa
     }
+    dica_sessao {
+        serial id_dica PK
+        int id_sessao FK
+        int indice_palavra "1 a 15"
+        int linha
+        int coluna
+        char letra
+        timestamp data_dica
+    }
 ```
 
 | Tabela | Finalidade | Destaques |
@@ -428,6 +441,7 @@ erDiagram
 | `versao_cruzada` | Cada conjunto de palavras | Imutável; `CHECK (qtd_palavras BETWEEN 5 AND 15)` |
 | `sessao_jogo` | Uma partida | `fim` nulo = em andamento; tempo calculado pelo servidor |
 | `resposta_sessao` | O que o aluno enviou por palavra e conferência | `indice_palavra` aponta para a palavra no documento Mongo |
+| `dica_sessao` | Letras reveladas pela dica (RN20) | Até 3 por partida; `UNIQUE (id_sessao, linha, coluna)` |
 
 ### 5.3 MongoDB — coleção `conteudo_versao`
 
@@ -514,7 +528,7 @@ Base: `/api`. JSON em tudo; autenticação por cookie de sessão.
 | Autenticação | `GET /auth/usuarios`, `POST /auth/entrar`, `POST /auth/ludica`, `GET /auth/eu`, `POST /auth/sair` | todos |
 | Cruzadas | `GET/POST /professor/cruzadas`, `GET/PUT/DELETE /professor/cruzadas/:id` | professor (autor) |
 | Busca | `GET /jogos?texto=&codigo=&disciplina=&dificuldade=`, `GET /jogos/:id` | aluno |
-| Partida | `POST /jogos/:id/sessoes`, `GET /sessoes/:id`, `POST /sessoes/:id/conferir`, `POST /sessoes/:id/encerrar` | aluno (dono) |
+| Partida | `POST /jogos/:id/sessoes`, `GET /sessoes/:id`, `POST /sessoes/:id/conferir`, `POST /sessoes/:id/dica`, `POST /sessoes/:id/encerrar` | aluno (dono) |
 | Disciplinas | `GET /disciplinas`, `POST/PUT/DELETE /disciplinas[/:id]` | logado / administrador |
 | Solicitações | `GET/POST /solicitacoes`, `POST /solicitacoes/:id/responder` | professor / administrador |
 
