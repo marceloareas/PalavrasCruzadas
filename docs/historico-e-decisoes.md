@@ -82,7 +82,8 @@ Situação em 14/10/2026:
 | Branch | Conteúdo |
 |---|---|
 | `main` | README inicial + documento da disciplina |
-| `dev`, `homolog` | Entrega 1 (Sprint 2), via merge da `feature/criacao-jogo-professor` |
-| `feature/criacao-jogo-professor` | Entrega 1 (Sprint 2) |
-| `feature/sprint-3` | Sprint 3 — **PR #2 → `dev`**, aguardando revisão |
-| `feature/jogo-aluno` | Jogo do aluno, pontuação, ranking e esta documentação (criada a partir da `feature/sprint-3`) |
+| `dev` | **Tudo até aqui**: entrega 1, Sprint 3, jogo do aluno e esta documentação |
+| `homolog` | Entrega 1 (Sprint 2). Promover a `dev` depois de validar as decisões com o professor |
+| `feature/criacao-jogo-professor` | Entrega 1 (Sprint 2) — PR #1, integrada |
+| `feature/sprint-3` | Sprint 3 — PR #2, integrada |
+| `feature/jogo-aluno` | Jogo do aluno, pontuação, ranking e documentação — integrada |
