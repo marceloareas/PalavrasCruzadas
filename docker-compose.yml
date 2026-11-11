@@ -1,7 +1,8 @@
 # Cruzadinha Digital - ambiente completo:
 #   web (React, nginx) -> http://localhost:8080
 #   api (Node/Express) -> http://localhost:3000/api
-#   postgres           -> localhost:5432
+#   postgres           -> localhost:5432 (troque com PG_PORTA no .env da raiz,
+#                         ex.: PG_PORTA=5433 se a 5432 ja estiver em uso)
 #   mongo              -> localhost:27017
 services:
   postgres:
@@ -12,7 +13,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: palavras_cruzadas
     ports:
-      - "5432:5432"
+      - "${PG_PORTA:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       # Rodam automaticamente so na 1a subida (volume vazio).
