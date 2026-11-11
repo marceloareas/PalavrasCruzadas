@@ -110,6 +110,38 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); bor
 .palavra-n { color: var(--muted); font-weight: 700; text-align: right; }
 .input-resposta { text-transform: uppercase; font-weight: 700; letter-spacing: .04em; }
 
+/* Importacao por texto colado (RESPOSTA;dica) */
+.palavras-head { gap: 10px; flex-wrap: wrap; }
+.importar { background: var(--brand-soft); border: 1px dashed var(--brand); border-radius: 12px; padding: 14px; gap: 10px; }
+.importar-head { display: flex; align-items: center; gap: 8px; }
+.importar-texto { font-family: ui-monospace, Consolas, monospace; font-size: .88rem; resize: vertical; width: 100%; box-sizing: border-box; }
+.importar-previa p { margin: 0; }
+.importar-erros { margin: 6px 0 0; padding-left: 20px; color: #b91c1c; font-size: .85rem; }
+
+/* Balao de dica: botao "?" que mostra o conteudo ao passar o mouse, focar ou clicar */
+.balao { position: relative; display: inline-flex; }
+.balao-gatilho {
+  width: 22px; height: 22px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--brand); color: #fff; font-weight: 800; font-size: .8rem; line-height: 1; padding: 0;
+}
+.balao-gatilho:focus-visible { outline: 2px solid var(--brand-ink); outline-offset: 2px; }
+.balao-conteudo {
+  display: none; position: absolute; z-index: 20; top: calc(100% + 10px); left: -12px;
+  width: min(380px, calc(100vw - 48px)); padding: 12px 14px; border-radius: 12px;
+  background: var(--ink); color: #fff; font-size: .84rem; font-weight: 400; line-height: 1.45;
+  box-shadow: 0 10px 30px rgba(30, 34, 60, .25);
+}
+.balao-conteudo::before {
+  content: ''; position: absolute; top: -6px; left: 17px; width: 12px; height: 12px;
+  background: var(--ink); transform: rotate(45deg);
+}
+.balao-conteudo code { background: rgba(255, 255, 255, .15); color: #fff; }
+.balao-conteudo pre {
+  margin: 8px 0; padding: 8px 10px; border-radius: 8px; background: rgba(255, 255, 255, .1);
+  font-size: .8rem; white-space: pre-wrap; word-break: break-word;
+}
+.balao:hover .balao-conteudo, .balao.aberto .balao-conteudo, .balao-gatilho:focus-visible + .balao-conteudo { display: block; }
+
 /* Grade */
 .grade-scroll { overflow-x: auto; }
 .grade { border-collapse: separate; border-spacing: 2px; margin: 8px 0; }

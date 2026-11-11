@@ -30,6 +30,8 @@ protótipo do Stitch (roxo `#6d4cf0`).
 | `Sessao.jsx` | Contexto com `usuario` (de `/auth/eu`), `regras` (de `/regras`), `entrar`, `entrarLudica`, `sair`; `<Protegida>` redireciona quem não tem o papel |
 | `api.js` | `api.get/post/put/del` sobre `fetch` (com cookie), `ErroApi` com `message` + `erros`, e `qs()` para query string |
 | `componentes/Layout.jsx` | Barra do topo com o menu do perfil, o papel, o usuário e Sair |
+| `componentes/ImportarPalavras.jsx` | Painel **Colar lista** do formulário de jogo (texto `RESPOSTA;dica`, uma por linha, ou arquivo .txt/.csv) e o `BalaoDica` (botão `?` com o formato e um exemplo) |
+| `importacao.js` | `interpretarTexto()`: lê o texto colado e devolve `{ palavras, erros }` com o número da linha de cada erro. Função pura, testada em `test/importacao.test.js` (`npm test`) |
 | `componentes/comuns.jsx` | `Erro`, `Aviso`, `Grade` (matriz + números), `ListaDicas`, `Ranking`, pílulas de dificuldade/status, `formatarTempo`, `formatarData` |
 
 ## Padrões usados nas páginas

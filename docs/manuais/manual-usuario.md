@@ -113,6 +113,22 @@ usuário e o botão **Sair**.
 - **+ Adicionar palavra** cria uma linha; **✕** remove.
 - Acentos e espaços podem ser digitados normalmente: "Endereço" vira **ENDERECO** na grade.
 
+**Colar a lista de uma vez.** Se você já tem as palavras prontas (num documento
+ou numa planilha), clique em **📋 Colar lista** e cole o texto com **uma palavra
+por linha**, a resposta e a dica separadas por **ponto e vírgula** (`;`):
+
+```text
+BRASIL;País onde fica o CEFET-RJ
+ATOMO;Menor parte de um elemento químico
+SATURNO;Planeta famoso pelos seus anéis
+```
+
+- O botão **?** ao lado do título mostra o formato e um exemplo; **Usar o exemplo** preenche a caixa com uma lista pronta para você ver como fica.
+- **Carregar arquivo .txt / .csv** lê um arquivo em vez de colar. Numa planilha, ponha a resposta na coluna A e a dica na coluna B e salve como *CSV separado por ponto e vírgula*. Uma primeira linha `resposta;dica` é ignorada.
+- Linhas em branco ou começando com `#` são ignoradas. A dica pode conter `;` (só o primeiro separa a resposta).
+- Abaixo da caixa aparece quantas palavras foram reconhecidas e, se houver problema, **o número da linha** e o que corrigir (falta o `;`, falta a dica, palavra curta/longa demais ou repetida).
+- **Substituir as palavras do formulário** troca tudo pela lista colada; **Adicionar às N atuais** junta com as que já estavam. Depois confira as linhas e salve normalmente.
+
 4. Clique em **Salvar e gerar grade**. O sistema confere tudo e monta a
    cruzadinha. Se estiver tudo certo, abre o jogo criado (seção 3.3).
 

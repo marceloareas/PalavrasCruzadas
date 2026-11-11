@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useSessao } from '../../Sessao.jsx';
-import { Erro, OPCOES_DIFICULDADE, OPCOES_STATUS } from '../../componentes/comuns.jsx';
+import { Aviso, Erro, OPCOES_DIFICULDADE, OPCOES_STATUS } from '../../componentes/comuns.jsx';
+import ImportarPalavras from '../../componentes/ImportarPalavras.jsx';
 
 const vazia = () => ({ resposta: '', dica: '' });
 
@@ -28,6 +29,8 @@ export default function FormCruzada() {
   const [erro, setErro] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [carregado, setCarregado] = useState(!editando);
+  const [importando, setImportando] = useState(false);
+  const [avisoImportacao, setAvisoImportacao] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -67,6 +70,18 @@ export default function FormCruzada() {
   });
   const alterarPalavra = (i, nome, valor) =>
     setPalavras(palavras.map((p, j) => (j === i ? { ...p, [nome]: valor } : p)));
+
+  // Palavras vindas do painel "Colar lista" (texto RESPOSTA;dica).
+  const importar = (novas, modo) => {
+    const atuais = palavras.filter((p) => p.resposta.trim() || p.dica.trim());
+    setPalavras(modo === 'adicionar' ? [...atuais, ...novas] : novas);
+    setImportando(false);
+    setAvisoImportacao(
+      `${novas.length} ${novas.length === 1 ? 'palavra importada' : 'palavras importadas'}` +
+      (modo === 'adicionar' ? ' e adicionadas às que já estavam.' : '.') +
+      ' Confira abaixo e salve para gerar a grade.'
+    );
+  };
 
   const salvar = async (e) => {
     e.preventDefault();
@@ -152,13 +167,35 @@ export default function FormCruzada() {
       <section className="card stack">
         <div className="palavras-head">
           <h2>Palavras e dicas</h2>
-          <span className={`badge-count ${preenchidas < min || preenchidas > max ? 'fora' : ''}`}>
-            {preenchidas} / {max} (mínimo {min})
-          </span>
+          <div className="acoes">
+            {!importando && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => { setImportando(true); setAvisoImportacao(null); }}
+              >
+                📋 Colar lista
+              </button>
+            )}
+            <span className={`badge-count ${preenchidas < min || preenchidas > max ? 'fora' : ''}`}>
+              {preenchidas} / {max} (mínimo {min})
+            </span>
+          </div>
         </div>
         <p className="muted small">
           Cadastre só a resposta e a dica. Ao salvar, o sistema monta a grade sozinho cruzando as palavras.
+          Já tem a lista pronta? Use <strong>Colar lista</strong> e cole tudo de uma vez no formato <code>RESPOSTA;dica</code>.
         </p>
+
+        {importando && (
+          <ImportarPalavras
+            regras={regras}
+            atuais={palavras}
+            onImportar={importar}
+            onFechar={() => setImportando(false)}
+          />
+        )}
+        <Aviso>{avisoImportacao}</Aviso>
 
         {palavras.map((p, i) => (
           <div key={i} className="palavra-row">
