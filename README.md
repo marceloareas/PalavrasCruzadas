@@ -195,7 +195,7 @@ encontra e joga → pontuação, ranking e resultados para o professor.
 - [x] Resolução da cruzadinha, pontuação e ranking
 - [x] Dica "revelar letra"
 - [x] Resultados das partidas para o professor
-- [ ] Integração real com o Lúdica (autenticação)
+- [x] Integração com o Lúdica: entrada pelo link com token e envio da pontuação ([detalhes](docs/integracao-ludica.md))
 - [ ] Ambientes de homologação e produção
 
 Decisões que ainda precisam ser validadas pelo grupo e pelo professor:

@@ -7,7 +7,9 @@
 #   - bancos e API NAO ficam expostos no host (so o nginx, na WEB_PORT);
 #   - senhas e segredo da sessao vem do .env.prod (obrigatorios);
 #   - MongoDB com usuario e senha;
-#   - containers reiniciam sozinhos; sem cruzadas de exemplo por padrao.
+#   - containers reiniciam sozinhos; sem cruzadas de exemplo por padrao;
+#   - so se entra pelo link do Ludica (sem atalhos de desenvolvimento) e o
+#     servico ludica-mock nao sobe.
 services:
   postgres:
     environment:
@@ -29,8 +31,19 @@ services:
       MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/?authSource=admin
       SESSION_SECRET: ${SESSION_SECRET:?defina SESSION_SECRET no .env.prod}
       SEED_EXEMPLOS: ${SEED_EXEMPLOS:-false}
+      LOGIN_DEV: "false"
+      LUDICA_SEGREDO: ${LUDICA_SEGREDO:?defina LUDICA_SEGREDO no .env.prod}
+      LUDICA_SEGREDO_ENVIO: ${LUDICA_SEGREDO_ENVIO:-}
+      LUDICA_URL_PONTUACAO: ${LUDICA_URL_PONTUACAO:-}
+      LUDICA_ID_JOGO: ${LUDICA_ID_JOGO:-}
+      LUDICA_PERFIL_PROFESSOR: ${LUDICA_PERFIL_PROFESSOR:-1}
+      LUDICA_PERFIL_ALUNO: ${LUDICA_PERFIL_ALUNO:-2}
+      LUDICA_URL_SITE: ${LUDICA_URL_SITE:-}
     ports: !reset []
     restart: unless-stopped
+
+  ludica-mock:
+    profiles: ["nunca"]
 
   web:
     ports: !override

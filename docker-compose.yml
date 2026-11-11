@@ -4,6 +4,7 @@
 #   postgres           -> localhost:5432 (troque com PG_PORTA no .env da raiz,
 #                         ex.: PG_PORTA=5433 se a 5432 ja estiver em uso)
 #   mongo              -> localhost:27017
+#   ludica-mock        -> http://localhost:4000/pontuacao (finge ser o Ludica)
 services:
   postgres:
     image: postgres:16-alpine
@@ -57,8 +58,22 @@ services:
       PORT: 3000
       SESSION_SECRET: troque-em-producao
       SEED_EXEMPLOS: "true"
+      # Integracao com o Ludica (ver backend/src/services/ludica.js).
+      LOGIN_DEV: "true"                 # atalhos "entrar como" / gerar link
+      LUDICA_SEGREDO: segredo-dev
+      LUDICA_URL_PONTUACAO: http://ludica-mock:4000/pontuacao
     ports:
       - "3000:3000"
+
+  # Faz o papel da API de pontuacao do Ludica em desenvolvimento.
+  ludica-mock:
+    build: ./backend
+    container_name: cruzadinha_ludica_mock
+    command: ["node", "scripts/ludica-mock.js"]
+    environment:
+      LUDICA_SEGREDO: segredo-dev
+    ports:
+      - "4000:4000"
 
   web:
     build: ./frontend

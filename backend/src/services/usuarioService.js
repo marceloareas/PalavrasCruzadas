@@ -1,44 +1,47 @@
 // ============================================================================
-// Integracao com o Ludica (provedor de identidade).
-// O Ludica envia: id, usertag, email, papel.
-// Aqui fazemos o "upsert" desse usuario no banco local e devolvemos o registro.
+// Usuarios vem do Ludica (provedor de identidade). Nao ha cadastro nem senha
+// aqui: o usuario chega pelo link do Ludica com perfil, email e gamertag
+// (ver services/ludica.js) e e criado/atualizado pela gamertag.
 // ============================================================================
 import { pool } from '../db/postgres.js';
-import { PAPEIS } from '../regras.js';
-import { validacao } from './erros.js';
+import { validacao, conflito } from './erros.js';
 
 const CAMPOS = 'id_usuario, id_ludica, usertag, nome, email, papel';
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Sincroniza (cria ou atualiza) um usuario a partir do payload do Ludica.
- * @param {{id:number, usertag:string, email:string, papel:string, nome?:string}} ludica
+ * Entrada pelo Ludica: procura a gamertag; se nao existe, cria o usuario.
+ * Se existe, atualiza email e papel - exceto administrador, que e definido
+ * aqui (o Ludica so conhece professor e aluno) e nunca e rebaixado.
+ * @param {{gamertag:string, email:string, papel:'professor'|'aluno'}} dados
  */
-export async function sincronizarUsuarioLudica(ludica) {
-  const id = Number.parseInt(ludica.id, 10);
-  const usertag = String(ludica.usertag || '').trim();
-  const email = String(ludica.email || '').trim().toLowerCase();
-  const papel = String(ludica.papel || '').trim().toLowerCase();
-  const nome = ludica.nome ? String(ludica.nome).trim() : usertag;
+export async function entrarPeloLudica({ gamertag, email, papel }) {
+  const tag = String(gamertag || '').trim();
+  const mail = String(email || '').trim().toLowerCase();
 
   const erros = [];
-  if (!Number.isInteger(id)) erros.push('id inválido.');
-  if (!usertag) erros.push('usertag obrigatório.');
-  if (!email) erros.push('email obrigatório.');
-  if (!PAPEIS.includes(papel)) erros.push(`papel deve ser ${PAPEIS.join(', ')} (RN01).`);
-  if (erros.length) throw validacao(erros, 'Payload do Lúdica inválido.');
+  if (!tag || tag.length > 50) erros.push('gamertag inválida.');
+  if (!EMAIL.test(mail) || mail.length > 150) erros.push('email inválido.');
+  if (!['professor', 'aluno'].includes(papel)) erros.push('perfil inválido.');
+  if (erros.length) throw validacao(erros, 'Dados do Lúdica inválidos.');
 
-  const { rows } = await pool.query(
-    `INSERT INTO usuario (id_ludica, usertag, nome, email, papel)
-     VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (id_ludica) DO UPDATE
-        SET usertag = EXCLUDED.usertag,
-            nome    = EXCLUDED.nome,
-            email   = EXCLUDED.email,
-            papel   = EXCLUDED.papel
-     RETURNING ${CAMPOS}`,
-    [id, usertag, nome, email, papel]
-  );
-  return rows[0];
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO usuario (usertag, nome, email, papel)
+       VALUES ($1, $1, $2, $3)
+       ON CONFLICT (usertag) DO UPDATE
+          SET email = EXCLUDED.email,
+              papel = CASE WHEN usuario.papel = 'administrador' THEN usuario.papel
+                           ELSE EXCLUDED.papel END
+       RETURNING ${CAMPOS}`,
+      [tag, mail, papel]
+    );
+    return rows[0];
+  } catch (err) {
+    // email UNIQUE: o mesmo email ja pertence a outra gamertag.
+    if (err.code === '23505') throw conflito('Este email já está associado a outra gamertag.');
+    throw err;
+  }
 }
 
 export async function listarUsuarios() {

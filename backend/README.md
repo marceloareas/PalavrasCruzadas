@@ -26,7 +26,7 @@ nela primeiro; o cookie de sessão vale para as outras rotas. A spec crua fica e
 ## Testes
 
 ```bash
-npm test      # gerador de grade, pontuação e dica (não precisam de banco)
+npm test      # gerador de grade, pontuação, dica e token do Lúdica (não precisam de banco)
 ```
 
 ## Organização
@@ -34,21 +34,24 @@ npm test      # gerador de grade, pontuação e dica (não precisam de banco)
 ```
 db/postgres/schema.sql   tabelas, CHECKs e índices (rodam na 1ª subida do container)
 db/postgres/seed.sql     usuários, disciplinas, 1 solicitação
+db/postgres/migracoes/   ALTERs para bancos já existentes
 db/mongo/modelo.md       coleção conteudo_versao
 src/server.js            conecta no Mongo, cria os exemplos e sobe a API
 src/app.js               Express, sessão, /api/health, /api/regras, tratamento de erros
 src/openapi.js           spec OpenAPI servida em /api/docs (atualizar ao mudar rotas)
 src/regras.js            limites (5–15 palavras…) e tabela de pontuação
 src/seedExemplos.js      4 cruzadas + 3 partidas de exemplo
-src/middleware/auth.js   sessão e papéis (ponto de integração com o Lúdica)
+src/middleware/auth.js   sessão e papéis
 src/routes/              auth · cruzadas (professor, aluno, partida) · disciplinas
-src/services/            cruzada, jogo, sessão, disciplina, usuário, gerador, pontuação
-test/                    gerador.test.js, pontuacao.test.js, dica.test.js
+src/services/            cruzada, jogo, sessão, disciplina, usuário, gerador, pontuação, ludica, envioLudica
+scripts/                 link-ludica (gera link de entrada) · ludica-mock (API falsa do Lúdica)
+test/                    gerador, pontuacao, dica, ludica
 ```
 
 ## Documentação
 
 - [Rotas da API](../docs/api.md)
+- [Integração com o Lúdica](../docs/integracao-ludica.md)
 - [Arquitetura e camadas](../docs/arquitetura.md)
 - [Modelo de dados](../docs/modelo-de-dados.md)
 - [Gerador de grade](../docs/gerador-de-grade.md)

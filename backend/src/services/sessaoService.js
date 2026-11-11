@@ -18,6 +18,7 @@ import { tentativaDoAcerto, calcularPontuacao } from './pontuacao.js';
 import { escolherCasa, reveladasPorPalavra } from './dica.js';
 import { DICAS } from '../regras.js';
 import { naoEncontrado, proibido, conflito, validacao } from './erros.js';
+import { enviarEmSegundoPlano } from './envioLudica.js';
 
 /**
  * Inicia uma partida (RN10: pode jogar quantas vezes quiser). Se o aluno ja
@@ -159,7 +160,8 @@ export async function obterSessao(idSessao, idAluno) {
   };
 }
 
-// Fecha a sessao: grava fim, tempo, acertos e pontuacao.
+// Fecha a sessao: grava fim, tempo, acertos e pontuacao, e marca a
+// pontuacao como pendente de envio ao Ludica (enviada apos o commit).
 async function finalizar(client, sessao, conteudo, dificuldade) {
   const { rows: [{ tempo }] } = await client.query(
     `SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - inicio))::int AS tempo
@@ -171,7 +173,8 @@ async function finalizar(client, sessao, conteudo, dificuldade) {
   const r = resultado({ ...sessao, tempo }, conteudo, linhas, dificuldade, dicas);
   await client.query(
     `UPDATE sessao_jogo
-        SET fim = CURRENT_TIMESTAMP, tempo = $1, acertos = $2, pontuacao = $3
+        SET fim = CURRENT_TIMESTAMP, tempo = $1, acertos = $2, pontuacao = $3,
+            ludica_envio = 'pendente'
       WHERE id_sessao = $4`,
     [tempo, r.detalhe.certas, r.pontuacao, sessao.id_sessao]
   );
@@ -186,7 +189,7 @@ export async function conferir(idSessao, idAluno, respostas) {
   if (!respostas || typeof respostas !== 'object' || Array.isArray(respostas)) {
     throw validacao(['Envie as respostas no formato { indice: "PALAVRA" }.']);
   }
-  return withTransaction(async (client) => {
+  const r = await withTransaction(async (client) => {
     const sessao = await carregarSessao(client, idSessao, idAluno, { bloquear: true });
     if (sessao.fim) throw conflito('Esta partida já foi encerrada.');
     const [conteudo, cab] = await Promise.all([
@@ -217,6 +220,8 @@ export async function conferir(idSessao, idAluno, respostas) {
     if (concluida) await finalizar(client, { ...sessao, tentativas: tentativa }, conteudo, cab.dificuldade);
     return { tentativa, certas, total, concluida };
   });
+  if (r.concluida) enviarEmSegundoPlano(idSessao);
+  return r;
 }
 
 /**
@@ -252,7 +257,7 @@ export async function revelarLetra(idSessao, idAluno, { indice, atual } = {}) {
 
 /** Aluno desiste/encerra: pontua com o que estava certo na ultima conferencia. */
 export async function encerrar(idSessao, idAluno) {
-  return withTransaction(async (client) => {
+  await withTransaction(async (client) => {
     const sessao = await carregarSessao(client, idSessao, idAluno, { bloquear: true });
     if (sessao.fim) throw conflito('Esta partida já foi encerrada.');
     const [conteudo, cab] = await Promise.all([
@@ -260,6 +265,7 @@ export async function encerrar(idSessao, idAluno) {
       obterCabecalho(sessao.id_cruzada)
     ]);
     await finalizar(client, sessao, conteudo, cab.dificuldade);
-    return { encerrada: true };
   });
+  enviarEmSegundoPlano(idSessao);
+  return { encerrada: true };
 }

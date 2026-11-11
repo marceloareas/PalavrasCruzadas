@@ -1,7 +1,7 @@
 # API REST
 
 Base: `http://localhost:8080/api` (pelo nginx) ou `http://localhost:3000/api` (direto na API).
-Tudo é JSON. A autenticação é por cookie de sessão (`cruzadinha.sid`), obtido em `/auth/entrar` ou `/auth/ludica`.
+Tudo é JSON. A autenticação é por cookie de sessão (`cruzadinha.sid`), obtido pelo link `/auth/ludica` (ou por `/auth/entrar` em desenvolvimento).
 
 ## Convenções
 
@@ -31,15 +31,22 @@ Limites usados também pelo front.
   "maxDicasPorPartida": 3, "descontoPorLetra": 0.2 }
 ```
 
-## Autenticação (simulada — ver [arquitetura.md](arquitetura.md#autenticação-provisória))
+## Autenticação (pelo Lúdica — ver [integracao-ludica.md](integracao-ludica.md))
+
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| GET | `/auth/ludica?perfil=&email=&gamertag=&token=` | — | 302 para `/` (logado) ou `/login?erro=...` |
+| GET | `/auth/eu` | — | usuário da sessão ou `null` |
+| GET | `/auth/modo` | — | `{ login_dev, url_ludica, perfis? }` |
+| POST | `/auth/sair` | — | 204 |
+
+Só com `LOGIN_DEV=true` (desenvolvimento; em produção respondem 404):
 
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
 | GET | `/auth/usuarios` | — | lista de usuários (para "entrar como") |
 | POST | `/auth/entrar` | `{ "id_usuario": 1 }` | usuário logado |
-| POST | `/auth/ludica` | `{ "id": 1003, "usertag": "prof.novo", "email": "...", "papel": "professor", "nome": "opcional" }` | usuário criado/atualizado e logado |
-| GET | `/auth/eu` | — | usuário da sessão ou `null` |
-| POST | `/auth/sair` | — | 204 |
+| POST | `/auth/dev/link-ludica` | `{ "perfil": "2", "email": "...", "gamertag": "..." }` | `{ url }`: link válido, como o Lúdica geraria |
 
 Usuário: `{ id_usuario, id_ludica, usertag, nome, email, papel }`.
 
