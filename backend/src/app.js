@@ -1,6 +1,7 @@
 // API REST (JSON) consumida pelo front em React.
 import express from 'express';
 import session from 'express-session';
+import swaggerUi from 'swagger-ui-express';
 
 import { carregarUsuario } from './middleware/auth.js';
 import authRoutes from './routes/auth.js';
@@ -10,6 +11,7 @@ import { pool } from './db/postgres.js';
 import { pingMongo } from './db/mongo.js';
 import { ErroNegocio } from './services/erros.js';
 import * as regras from './regras.js';
+import { openapi } from './openapi.js';
 
 export const app = express();
 
@@ -49,6 +51,10 @@ api.get('/regras', (req, res) => {
     descontoPorLetra: regras.DICAS.descontoPorLetra
   });
 });
+
+// Documentacao interativa (Swagger UI) e a spec crua.
+api.get('/openapi.json', (req, res) => res.json(openapi));
+api.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi, { customSiteTitle: 'Cruzadinha - API' }));
 
 api.use('/auth', authRoutes);
 api.use(disciplinaRoutes);

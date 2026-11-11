@@ -18,6 +18,11 @@ npm install
 npm run dev                          # http://localhost:3000/api
 ```
 
+Documentação interativa (Swagger UI): **http://localhost:3000/api/docs**
+(também em http://localhost:8080/api/docs pelo Docker). Faça `POST /auth/entrar`
+nela primeiro; o cookie de sessão vale para as outras rotas. A spec crua fica em
+`/api/openapi.json` e é definida em `src/openapi.js`.
+
 ## Testes
 
 ```bash
@@ -32,6 +37,7 @@ db/postgres/seed.sql     usuários, disciplinas, 1 solicitação
 db/mongo/modelo.md       coleção conteudo_versao
 src/server.js            conecta no Mongo, cria os exemplos e sobe a API
 src/app.js               Express, sessão, /api/health, /api/regras, tratamento de erros
+src/openapi.js           spec OpenAPI servida em /api/docs (atualizar ao mudar rotas)
 src/regras.js            limites (5–15 palavras…) e tabela de pontuação
 src/seedExemplos.js      4 cruzadas + 3 partidas de exemplo
 src/middleware/auth.js   sessão e papéis (ponto de integração com o Lúdica)
