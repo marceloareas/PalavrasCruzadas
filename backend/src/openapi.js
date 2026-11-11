@@ -1,8 +1,9 @@
 // ============================================================================
 // Especificacao OpenAPI da API, servida pelo Swagger UI em /api/docs.
 //
-// A autenticacao e por cookie de sessao: chame POST /auth/entrar (ou
-// /auth/ludica) primeiro e o navegador passa a mandar o cookie nas demais.
+// A autenticacao e por cookie de sessao: chame POST /auth/entrar (atalho de
+// desenvolvimento) ou abra um link de GET /auth/ludica primeiro e o navegador
+// passa a mandar o cookie nas demais.
 // Ao criar/alterar rotas, atualize este arquivo.
 // ============================================================================
 import * as regras from './regras.js';
@@ -98,8 +99,8 @@ export const openapi = {
         type: 'object',
         properties: {
           id_usuario: { type: 'integer' },
-          id_ludica: { type: 'integer' },
-          usertag: { type: 'string' },
+          id_ludica: { type: 'integer', nullable: true },
+          usertag: { type: 'string', description: 'gamertag no Lúdica' },
           nome: { type: 'string' },
           email: { type: 'string' },
           papel: { type: 'string', enum: regras.PAPEIS }
@@ -141,7 +142,7 @@ export const openapi = {
     '/auth/usuarios': {
       get: {
         tags: ['Autenticação'],
-        summary: 'Lista os usuários já sincronizados (tela "entrar como")',
+        summary: 'Lista os usuários (tela "entrar como"; só com LOGIN_DEV)',
         responses: { 200: ok('OK', { type: 'array', items: ref('Usuario') }) }
       }
     },
@@ -155,7 +156,7 @@ export const openapi = {
     '/auth/entrar': {
       post: {
         tags: ['Autenticação'],
-        summary: 'Entra como um usuário existente (atalho de desenvolvimento)',
+        summary: 'Entra como um usuário existente (atalho de desenvolvimento; só com LOGIN_DEV)',
         requestBody: corpo(
           { type: 'object', required: ['id_usuario'], properties: { id_usuario: { type: 'integer' } } },
           { id_usuario: 1 }
@@ -164,24 +165,50 @@ export const openapi = {
       }
     },
     '/auth/ludica': {
+      get: {
+        tags: ['Autenticação'],
+        summary: 'Entrada pelo link do Lúdica (redireciona)',
+        description:
+          'O Lúdica gera o link. Confere `token` = hex(sha256(gamertag + AAAA-MM-DD + palavra)), ' +
+          'cria/atualiza o usuário pela gamertag e redireciona para `/` com a sessão criada. ' +
+          'Se algo falhar, redireciona para `/login?erro=token|perfil|email|dados`. ' +
+          'Ver docs/integracao-ludica.md.',
+        parameters: [
+          { name: 'perfil', in: 'query', required: true, schema: { type: 'string' }, description: '1 = professor, 2 = aluno (configurável)' },
+          { name: 'email', in: 'query', required: true, schema: { type: 'string' } },
+          { name: 'gamertag', in: 'query', required: true, schema: { type: 'string' } },
+          { name: 'token', in: 'query', required: true, schema: { type: 'string' } }
+        ],
+        responses: { 302: { description: 'Redireciona para `/` (logado) ou `/login?erro=...`.' } }
+      }
+    },
+    '/auth/modo': {
+      get: {
+        tags: ['Autenticação'],
+        summary: 'Se os atalhos de desenvolvimento estão ligados (LOGIN_DEV)',
+        responses: { 200: ok('OK', {
+          type: 'object',
+          properties: {
+            login_dev: { type: 'boolean' },
+            url_ludica: { type: 'string', nullable: true },
+            perfis: { type: 'object', description: 'só em desenvolvimento' }
+          }
+        }) }
+      }
+    },
+    '/auth/dev/link-ludica': {
       post: {
         tags: ['Autenticação'],
-        summary: 'Simula o Lúdica: cria/atualiza o usuário e loga',
+        summary: 'Gera um link de entrada válido, como o Lúdica geraria (só com LOGIN_DEV)',
         requestBody: corpo(
           {
             type: 'object',
-            required: ['id', 'usertag', 'email', 'papel'],
-            properties: {
-              id: { type: 'integer', description: 'id do usuário no Lúdica' },
-              usertag: { type: 'string' },
-              email: { type: 'string' },
-              papel: { type: 'string', enum: regras.PAPEIS },
-              nome: { type: 'string' }
-            }
+            required: ['perfil', 'email', 'gamertag'],
+            properties: { perfil: { type: 'string' }, email: { type: 'string' }, gamertag: { type: 'string' } }
           },
-          { id: 2001, usertag: 'aluno.bruno', email: 'bruno.lima@aluno.cefet-rj.br', papel: 'aluno' }
+          { perfil: '2', email: 'aluno.novo@aluno.cefet-rj.br', gamertag: 'aluno.novo' }
         ),
-        responses: { 200: ok('OK', ref('Usuario')), ...comValidacao }
+        responses: { 200: ok('OK', { type: 'object', properties: { url: { type: 'string' } } }), 404: erro('LOGIN_DEV desligado.') }
       }
     },
     '/auth/sair': {

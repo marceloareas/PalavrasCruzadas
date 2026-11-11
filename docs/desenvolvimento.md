@@ -114,7 +114,7 @@ Passo a passo completo, backup/restauração e HTTPS:
 | adicionar uma rota | `backend/src/routes/*.js` → service em `backend/src/services/` |
 | adicionar uma tabela/coluna | `backend/db/postgres/schema.sql` + `docker compose down -v` |
 | adicionar uma tela | `frontend/src/paginas/...` + rota em `frontend/src/main.jsx` (+ item de menu em `componentes/Layout.jsx`) |
-| integrar o login com o Lúdica | `backend/src/middleware/auth.js` (`carregarUsuario`) |
+| ajustar a regra do token / perfis do Lúdica | `backend/src/services/ludica.js` (+ `test/ludica.test.js`) — ver [integracao-ludica.md](integracao-ludica.md) |
 
 ## Problemas comuns
 

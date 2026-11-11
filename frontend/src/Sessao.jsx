@@ -14,15 +14,16 @@ export function SessaoProvider({ children }) {
     api.get('/regras').then(setRegras).catch(() => {});
   }, []);
 
+  // Atalho de desenvolvimento ("entrar como"). Em producao so se entra pelo
+  // link do Ludica, que cai direto no backend (GET /api/auth/ludica).
   const entrar = async (idUsuario) => setUsuario(await api.post('/auth/entrar', { id_usuario: idUsuario }));
-  const entrarLudica = async (payload) => setUsuario(await api.post('/auth/ludica', payload));
   const sair = async () => {
     await api.post('/auth/sair');
     setUsuario(null);
   };
 
   return (
-    <SessaoContexto.Provider value={{ usuario, regras, entrar, entrarLudica, sair }}>
+    <SessaoContexto.Provider value={{ usuario, regras, entrar, sair }}>
       {children}
     </SessaoContexto.Provider>
   );

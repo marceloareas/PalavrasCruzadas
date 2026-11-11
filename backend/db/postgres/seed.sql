@@ -1,8 +1,8 @@
 -- ============================================================================
 -- Dados iniciais (seed) - Cruzadinha Digital
 --
--- Usuarios como se tivessem sido enviados pelo Ludica (id, usertag, email,
--- papel). O `id` do Ludica e gravado em `id_ludica`.
+-- Usuarios como se ja tivessem entrado pelo Ludica (gamertag, email, perfil).
+-- O administrador so existe aqui: o Ludica so envia professor ou aluno.
 --
 -- As cruzadas de exemplo NAO estao aqui: elas tem conteudo no MongoDB e sao
 -- criadas pela API na primeira subida (src/seedExemplos.js), usando o mesmo
@@ -17,7 +17,7 @@ INSERT INTO usuario (id_ludica, usertag, nome, email, papel) VALUES
     (2002, 'aluno.duda',  'Eduarda Nogueira', 'eduarda.nog@aluno.cefet-rj.br',    'aluno'),
     (2003, 'aluno.rafa',  'Rafael Martins',   'rafael.martins@aluno.cefet-rj.br', 'aluno'),
     (9001, 'admin.dcc',   'Secretaria DCC',   'secretaria.dcc@cefet-rj.br',       'administrador')
-ON CONFLICT (id_ludica) DO NOTHING;
+ON CONFLICT (usertag) DO NOTHING;
 
 INSERT INTO disciplina (nome, codigo) VALUES
     ('Engenharia de Software',  'ES'),

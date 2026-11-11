@@ -12,8 +12,9 @@
 -- Como uma versao nunca e alterada depois de criada (RN09), o documento no
 -- Mongo tambem e imutavel; a ligacao entre os bancos e o `id_versao`.
 --
--- Usuarios vem do Ludica (provedor de identidade), que envia:
---   id, usertag, email, papel   -> por isso nao ha coluna de senha.
+-- Usuarios vem do Ludica (provedor de identidade), que envia no link de
+-- entrada: perfil, email e gamertag (+ token) -> por isso nao ha senha.
+-- A gamertag fica em `usertag`.
 -- ============================================================================
 
 DROP TABLE IF EXISTS dica_sessao            CASCADE;
@@ -31,8 +32,8 @@ DROP TABLE IF EXISTS usuario                CASCADE;
 -- ---------------------------------------------------------------------------
 CREATE TABLE usuario (
     id_usuario    SERIAL       PRIMARY KEY,
-    id_ludica     INTEGER      NOT NULL UNIQUE,          -- id externo (Ludica)
-    usertag       VARCHAR(50)  NOT NULL UNIQUE,          -- handle no Ludica
+    id_ludica     INTEGER      UNIQUE,                   -- id externo (Ludica), opcional
+    usertag       VARCHAR(50)  NOT NULL UNIQUE,          -- gamertag no Ludica (chave de entrada)
     nome          VARCHAR(100),
     email         VARCHAR(150) NOT NULL UNIQUE,
     papel         VARCHAR(20)  NOT NULL
@@ -132,8 +133,17 @@ CREATE TABLE sessao_jogo (
     tentativas INTEGER      NOT NULL DEFAULT 0,
     acertos    INTEGER      NOT NULL DEFAULT 0,
     erros      INTEGER      NOT NULL DEFAULT 0,
-    pontuacao  NUMERIC(7,2) NOT NULL DEFAULT 0.00
+    pontuacao  NUMERIC(7,2) NOT NULL DEFAULT 0.00,
+    -- Envio da pontuacao ao Ludica (services/envioLudica.js).
+    -- NULL = partida em andamento (ou anterior a integracao).
+    ludica_envio      VARCHAR(10)  CHECK (ludica_envio IN ('pendente', 'enviado', 'falhou')),
+    ludica_tentativas INTEGER      NOT NULL DEFAULT 0,
+    ludica_proxima    TIMESTAMP,                   -- nao tentar antes disto
+    ludica_enviado_em TIMESTAMP,
+    ludica_erro       TEXT
 );
+
+CREATE INDEX idx_sessao_ludica_pendente ON sessao_jogo (fim) WHERE ludica_envio = 'pendente';
 
 -- ---------------------------------------------------------------------------
 -- resposta_sessao  (cada tentativa do aluno para uma palavra)

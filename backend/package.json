@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "link-ludica": "node scripts/link-ludica.js",
+    "ludica-mock": "node scripts/ludica-mock.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
