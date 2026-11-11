@@ -87,6 +87,50 @@ MOCK_FALHAR=true npm run ludica-mock                       # responde 503 (testa
 npm run link-ludica -- aluno.bruno 2 bruno.lima@aluno.cefet-rj.br   # imprime um link válido
 ```
 
+### Testar com o Lúdica de verdade
+
+Testado em 11/11/2026 com o [repositório do Lúdica](https://github.com/marceloareas/Ludica)
+rodando na mesma máquina. Numa branch local, adicionamos a ele o lado da
+integração que ainda não existe por lá:
+- `GET /cruzadinha/link` (exige o JWT do login) gera o link com o token;
+- `POST /cruzadinha/pontuacao` confere o token e grava em `historico_partida` e `pontuacao`;
+- o botão "Jogar" do jogo `CRUZD` chama esse link;
+- o seed cria o jogo `CRUZD` e o usuário `prof.marcelo`, com `tipo_usuario` Professor.
+
+Palavra secreta de teste nos dois lados: **`jabuticaba`**. É o padrão do
+compose de dev; em produção use outra.
+
+O Lúdica usa fixo as portas 3000 (API) e 5433 (Postgres). Por isso, no `.env` da
+raiz da Cruzadinha:
+
+```
+PG_PORTA=5434
+API_PORTA=3001
+LUDICA_URL_PONTUACAO=http://host.docker.internal:3000/cruzadinha/pontuacao
+LUDICA_URL_SITE=http://localhost:5173
+```
+
+Subindo tudo:
+
+```bash
+docker compose up -d                      # Cruzadinha (8080)
+cd ../Ludica/Docker && docker compose up -d
+cd ../back-end && npm ci && node seed.js && node server.js   # API do Lúdica (3000)
+cd ../front-end && npm ci && npx vite     # Lúdica (5173)
+```
+
+Fluxo: entrar no Lúdica (`alice` / `123456`, ou `prof.marcelo` / `123456`) →
+Jogos → Cruzadinha → **Jogar**. Ao terminar a partida, os pontos aparecem no
+histórico do jogo no Lúdica.
+
+Resultado do teste:
+- o link do Lúdica loga na Cruzadinha e cria o usuário (aluno e professor);
+- a partida terminada aparece no histórico e na pontuação acumulada do Lúdica;
+- com a API do Lúdica desligada, a partida fica pendente e é entregue sozinha
+  quando ela volta;
+- trocar `perfil=2` por `perfil=1` no link de um aluno faz ele entrar como
+  professor. Ver "Em aberto" abaixo.
+
 ## Banco já existente
 
 O `schema.sql` só roda na primeira subida. Em um banco criado antes desta
@@ -112,6 +156,7 @@ confirmados com eles:
   `{ id_usuario, id_jogo, pontos }` (id interno deles, não email/gamertag) e
   ainda tem um bug: o controller chama `addscore`, mas o service exporta
   `addScore`, então toda chamada responde 500.
-- **Segurança:** o token só assina gamertag e data. Quem tiver um link de aluno
-  pode trocar `perfil` ou `email` e o token continua válido, o dia todo.
-  Sugestão: incluir perfil e email no hash.
+- **Segurança (confirmado no teste):** o token só assina gamertag e data. Quem
+  tiver um link de aluno pode trocar `perfil` ou `email` e o token continua
+  válido, o dia todo; um aluno vira professor só editando a URL. Sugestão:
+  incluir perfil e email no hash, por exemplo `sha256(gamertag + perfil + email + data + palavra)`.

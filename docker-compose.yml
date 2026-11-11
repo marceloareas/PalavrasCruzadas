@@ -1,6 +1,6 @@
 # Cruzadinha Digital - ambiente completo:
 #   web (React, nginx) -> http://localhost:8080
-#   api (Node/Express) -> http://localhost:3000/api
+#   api (Node/Express) -> http://localhost:3000/api (troque com API_PORTA)
 #   postgres           -> localhost:5432 (troque com PG_PORTA no .env da raiz,
 #                         ex.: PG_PORTA=5433 se a 5432 ja estiver em uso)
 #   mongo              -> localhost:27017
@@ -58,12 +58,17 @@ services:
       PORT: 3000
       SESSION_SECRET: troque-em-producao
       SEED_EXEMPLOS: "true"
-      # Integracao com o Ludica (ver backend/src/services/ludica.js).
+      # Integracao com o Ludica (ver docs/integracao-ludica.md). Por padrao
+      # fala com o ludica-mock; para usar um Ludica de verdade rodando na
+      # maquina, defina no .env da raiz:
+      #   LUDICA_URL_PONTUACAO=http://host.docker.internal:3000/cruzadinha/pontuacao
+      #   LUDICA_URL_SITE=http://localhost:5173
       LOGIN_DEV: "true"                 # atalhos "entrar como" / gerar link
-      LUDICA_SEGREDO: segredo-dev
-      LUDICA_URL_PONTUACAO: http://ludica-mock:4000/pontuacao
+      LUDICA_SEGREDO: ${LUDICA_SEGREDO:-jabuticaba}   # palavra de teste
+      LUDICA_URL_PONTUACAO: ${LUDICA_URL_PONTUACAO:-http://ludica-mock:4000/pontuacao}
+      LUDICA_URL_SITE: ${LUDICA_URL_SITE:-}
     ports:
-      - "3000:3000"
+      - "${API_PORTA:-3000}:3000"
 
   # Faz o papel da API de pontuacao do Ludica em desenvolvimento.
   ludica-mock:
@@ -71,7 +76,7 @@ services:
     container_name: cruzadinha_ludica_mock
     command: ["node", "scripts/ludica-mock.js"]
     environment:
-      LUDICA_SEGREDO: segredo-dev
+      LUDICA_SEGREDO: ${LUDICA_SEGREDO:-jabuticaba}
     ports:
       - "4000:4000"
 
