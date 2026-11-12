@@ -9,7 +9,8 @@
 import { Router } from 'express';
 import { listarUsuarios, obterUsuario, entrarPeloLudica } from '../services/usuarioService.js';
 import {
-  hashEntradaValido, papelDoTipo, urlRetornoValida, camposDeEntrada, configLudica
+  hashEntradaValido, papelDoTipo, urlRetornoValida, camposDeEntrada, configLudica,
+  montarSeed, dataDoDia, sha256
 } from '../services/ludica.js';
 import { ErroNegocio } from '../services/erros.js';
 
@@ -38,10 +39,16 @@ const negar = (res, motivo) => res.redirect(303, `/login?erro=${encodeURICompone
 // (os campos jogo e data recebidos nao sao usados para isso).
 router.post('/ludica', async (req, res) => {
   const { tipo_usuario: tipo, email, gamertag, hash, url_retorno: urlRetorno } = req.body ?? {};
+  // Mostra no log da API o que chegou do Ludica (docker compose logs -f api).
+  console.log(`[ludica] <- entrada: ${JSON.stringify(req.body ?? {})}`);
   if (![tipo, email, gamertag, hash, urlRetorno].every((v) => typeof v === 'string' && v.trim())) {
+    console.log('[ludica]    recusada: faltam campos');
     return negar(res, 'dados');
   }
-  if (!hashEntradaValido(gamertag.trim(), hash.trim())) return negar(res, 'token');
+  const seed = montarSeed(configLudica().nomeJogo, 'JOGAR', gamertag.trim(), dataDoDia());
+  const hashOk = hashEntradaValido(gamertag.trim(), hash.trim());
+  console.log(`[ludica]    seed esperada: ${seed} -> hash ${hashOk ? 'confere' : `NÃO confere (esperado ${sha256(seed)})`}`);
+  if (!hashOk) return negar(res, 'token');
   const papel = papelDoTipo(tipo);
   if (!papel) return negar(res, 'perfil');
   if (!urlRetornoValida(urlRetorno.trim())) return negar(res, 'dados');

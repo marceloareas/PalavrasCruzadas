@@ -88,10 +88,23 @@ do envio.
 - Cada partida é reservada por um `UPDATE` atômico antes do envio, então nunca é
   enviada duas vezes (o Lúdica **soma** os pontos).
 
-O log da API mostra cada envio:
+O log da API (`docker compose logs -f api`) mostra a entrada e a volta completas,
+com seed, hash e resposta do Lúdica:
 
 ```
+[ludica] <- entrada: {"tipo_usuario":"aluno","email":"alice@email.com","gamertag":"alice","hash":"4653…439e","jogo":"CRUZADINHA","data":"11112026","url_retorno":"http://…/integracao/resultados"}
+[ludica]    seed esperada: LUD1C@-CRUZADINHA-JOGAR-alice-11112026 -> hash confere
+[ludica] -> POST http://…/integracao/resultados
+[ludica]    seed:  LUD1C@-CRUZADINHA-JOGOU-alice-11112026
+[ludica]    corpo: {"jogo":"CRUZADINHA","gamertag":"alice","data":"11112026","pontos":772,"tempo_segundos":180,"hash":"…"}
+[ludica] <- 201 {"mensagem":"Resultado registrado","jogo":"CRUZADINHA","gamertag":"alice","partida":{…}}
 [ludica] partida 16 enviada ao Lúdica: alice, 772 pts, 180s em "Banco de Dados — Fundamentos" (tentativa 1)
+```
+
+Se o hash da entrada não bater, a linha mostra o hash esperado, para comparar com o
+que o Lúdica mandou. Se o envio falhar:
+
+```
 [ludica] partida 17 de alice: envio 1/10 falhou - fetch failed (vai tentar de novo)
 ```
 

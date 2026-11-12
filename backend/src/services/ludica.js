@@ -124,22 +124,34 @@ export function corpoDaVolta({ gamertag, pontos, tempoSegundos }, agora = new Da
  */
 export async function postarResultado(urlRetorno, dados) {
   const corpo = corpoDaVolta(dados);
+  const json = JSON.stringify(corpo);
+
+  // Mostra no log da API exatamente o que vai e o que volta (docker compose logs -f api).
+  console.log(
+    `[ludica] -> POST ${urlRetorno}\n` +
+    `[ludica]    seed:  ${montarSeed(corpo.jogo, 'JOGOU', corpo.gamertag, corpo.data)}\n` +
+    `[ludica]    corpo: ${json}`
+  );
   const resp = await fetch(urlRetorno, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(corpo),
+    body: json,
     signal: AbortSignal.timeout(configLudica().timeoutMs)
   });
+  const texto = await resp.text().catch(() => '');
+  console.log(`[ludica] <- ${resp.status} ${texto.slice(0, 500)}`);
+
+  let resposta = null;
+  try {
+    resposta = JSON.parse(texto);
+  } catch { /* corpo nao e JSON */ }
+
   if (!resp.ok) {
-    const texto = await resp.text().catch(() => '');
-    let motivo = texto.slice(0, 200);
-    try {
-      motivo = JSON.parse(texto).error ?? motivo;
-    } catch { /* corpo nao e JSON */ }
+    const motivo = resposta?.error ?? texto.slice(0, 200);
     const err = new Error(`Lúdica respondeu ${resp.status}: ${motivo}`);
     // 408 (timeout) e 429 (muitas chamadas) sao passageiros: vale reenviar.
     err.definitivo = resp.status >= 400 && resp.status < 500 && ![408, 429].includes(resp.status);
     throw err;
   }
-  return { corpo, resposta: await resp.json().catch(() => null) };
+  return { corpo, resposta };
 }
