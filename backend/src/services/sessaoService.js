@@ -161,7 +161,8 @@ export async function obterSessao(idSessao, idAluno) {
 }
 
 // Fecha a sessao: grava fim, tempo, acertos e pontuacao, e marca a
-// pontuacao como pendente de envio ao Ludica (enviada apos o commit).
+// pontuacao como pendente de envio ao Ludica (enviada apos o commit) se o
+// aluno entrou pelo Ludica (temos o url_retorno dele).
 async function finalizar(client, sessao, conteudo, dificuldade) {
   const { rows: [{ tempo }] } = await client.query(
     `SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - inicio))::int AS tempo
@@ -174,7 +175,8 @@ async function finalizar(client, sessao, conteudo, dificuldade) {
   await client.query(
     `UPDATE sessao_jogo
         SET fim = CURRENT_TIMESTAMP, tempo = $1, acertos = $2, pontuacao = $3,
-            ludica_envio = 'pendente'
+            ludica_envio = (SELECT CASE WHEN u.ludica_url_retorno IS NOT NULL THEN 'pendente' END
+                              FROM usuario u WHERE u.id_usuario = sessao_jogo.id_aluno)
       WHERE id_sessao = $4`,
     [tempo, r.detalhe.certas, r.pontuacao, sessao.id_sessao]
   );

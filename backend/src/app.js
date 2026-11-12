@@ -12,11 +12,14 @@ import { pingMongo } from './db/mongo.js';
 import { ErroNegocio } from './services/erros.js';
 import * as regras from './regras.js';
 import { openapi } from './openapi.js';
+import { configLudica } from './services/ludica.js';
 
 export const app = express();
 
 app.set('trust proxy', 1);
 app.use(express.json());
+// A entrada do Ludica chega como formulario (application/x-www-form-urlencoded).
+app.use(express.urlencoded({ extended: false }));
 app.use(
   session({
     name: 'cruzadinha.sid',
@@ -36,6 +39,17 @@ api.get('/health', async (req, res) => {
     res.json({ status: 'ok' });
   } catch {
     res.status(503).json({ status: 'banco_indisponivel' });
+  }
+});
+
+// Status para o Ludica: ele chama antes de cada partida e espera 200 em ate
+// 3 s. Se os bancos estiverem fora, o jogo nao funciona: responde 503.
+api.get('/status', async (req, res) => {
+  try {
+    await Promise.all([pool.query('SELECT 1'), pingMongo()]);
+    res.json({ status: 'online', jogo: configLudica().nomeJogo });
+  } catch {
+    res.status(503).json({ status: 'offline' });
   }
 });
 

@@ -44,7 +44,7 @@ src/seedExemplos.js      4 cruzadas + 3 partidas de exemplo
 src/middleware/auth.js   sessão e papéis
 src/routes/              auth · cruzadas (professor, aluno, partida) · disciplinas
 src/services/            cruzada, jogo, sessão, disciplina, usuário, gerador, pontuação, ludica, envioLudica
-scripts/                 link-ludica (gera link de entrada) · ludica-mock (API falsa do Lúdica)
+scripts/                 ludica-mock (API de resultados falsa do Lúdica)
 test/                    gerador, pontuacao, dica, ludica
 ```
 

@@ -38,6 +38,7 @@ CREATE TABLE usuario (
     email         VARCHAR(150) NOT NULL UNIQUE,
     papel         VARCHAR(20)  NOT NULL
                   CHECK (papel IN ('professor', 'aluno', 'administrador')),
+    ludica_url_retorno VARCHAR(500),                     -- para onde enviar o resultado (vem na entrada)
     data_cadastro TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

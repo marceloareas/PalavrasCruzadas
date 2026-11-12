@@ -1,7 +1,7 @@
 // ============================================================================
 // Sessao e controle de acesso por papel (RN01/RN02).
 //
-// O login e feito pelo link do Ludica (routes/auth.js, GET /ludica); depois
+// O login e feito pela entrada do Ludica (routes/auth.js, POST /ludica); depois
 // disso a sessao guarda so o id do usuario local.
 // ============================================================================
 import { obterUsuario } from '../services/usuarioService.js';
