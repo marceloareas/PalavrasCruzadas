@@ -4,7 +4,7 @@
 #   postgres           -> localhost:5432 (troque com PG_PORTA no .env da raiz,
 #                         ex.: PG_PORTA=5433 se a 5432 ja estiver em uso)
 #   mongo              -> localhost:27017
-#   ludica-mock        -> http://localhost:4000/pontuacao (finge ser o Ludica)
+#   ludica-mock        -> http://localhost:4000/integracao/resultados (finge ser o Ludica)
 services:
   postgres:
     image: postgres:16-alpine
@@ -58,25 +58,23 @@ services:
       PORT: 3000
       SESSION_SECRET: troque-em-producao
       SEED_EXEMPLOS: "true"
-      # Integracao com o Ludica (ver docs/integracao-ludica.md). Por padrao
-      # fala com o ludica-mock; para usar um Ludica de verdade rodando na
-      # maquina, defina no .env da raiz:
-      #   LUDICA_URL_PONTUACAO=http://host.docker.internal:3000/cruzadinha/pontuacao
-      #   LUDICA_URL_SITE=http://localhost:5173
-      LOGIN_DEV: "true"                 # atalhos "entrar como" / gerar link
-      LUDICA_SEGREDO: ${LUDICA_SEGREDO:-jabuticaba}   # palavra de teste
-      LUDICA_URL_PONTUACAO: ${LUDICA_URL_PONTUACAO:-http://ludica-mock:4000/pontuacao}
-      LUDICA_URL_SITE: ${LUDICA_URL_SITE:-}
+      # Integracao com o Ludica (ver docs/integracao-ludica.md). O resultado
+      # vai para o url_retorno que o Ludica manda na entrada; nao ha URL fixa.
+      LOGIN_DEV: "true"                 # atalhos "entrar como" / simular entrada
+      LUDICA_NOME_JOGO: ${LUDICA_NOME_JOGO:-CRUZADINHA}   # titulo do jogo no Ludica
+      LUDICA_URL_SITE: ${LUDICA_URL_SITE:-}               # botao "Ir para o Ludica"
+      # url_retorno sugerido no simulador de entrada (aponta para o ludica-mock)
+      LUDICA_URL_RETORNO_DEV: http://ludica-mock:4000/integracao/resultados
     ports:
       - "${API_PORTA:-3000}:3000"
 
-  # Faz o papel da API de pontuacao do Ludica em desenvolvimento.
+  # Faz o papel da API de resultados do Ludica em desenvolvimento.
   ludica-mock:
     build: ./backend
     container_name: cruzadinha_ludica_mock
     command: ["node", "scripts/ludica-mock.js"]
     environment:
-      LUDICA_SEGREDO: ${LUDICA_SEGREDO:-jabuticaba}
+      LUDICA_NOME_JOGO: ${LUDICA_NOME_JOGO:-CRUZADINHA}
     ports:
       - "4000:4000"
 

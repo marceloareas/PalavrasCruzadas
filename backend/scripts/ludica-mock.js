@@ -1,24 +1,48 @@
-// Servidor que se passa pela API de pontuacao do Ludica (so desenvolvimento).
-// Confere o token e loga o que chegou.
+// Servidor que se passa pela API de resultados do Ludica (so desenvolvimento).
+// Confere os campos e o hash JOGOU como o Ludica confere, e loga o que chegou.
 //
-//   npm run ludica-mock                 -> http://localhost:4000/pontuacao
+//   npm run ludica-mock                 -> http://localhost:4000/integracao/resultados
 //   MOCK_FALHAR=true npm run ludica-mock -> responde 503 (testa o reenvio)
 import 'dotenv/config';
 import express from 'express';
-import { configLudica, dataDoDia, tokenLudica } from '../src/services/ludica.js';
+import { dataDoDia, hashLudica, configLudica } from '../src/services/ludica.js';
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-app.post('/pontuacao', (req, res) => {
-  const { email, gamertag, pontuacao, token } = req.body ?? {};
-  const esperado = tokenLudica(gamertag, dataDoDia(), configLudica().segredoEnvio);
-  const ok = token === esperado;
-  console.log(`[ludica-mock] ${new Date().toISOString()} ${gamertag} <${email}> ${pontuacao} pts - token ${ok ? 'ok' : 'INVÁLIDO'}`);
-  if (process.env.MOCK_FALHAR === 'true') return res.status(503).json({ erro: 'fora do ar (simulado)' });
-  if (!ok) return res.status(401).json({ erro: 'token inválido' });
-  res.status(201).json({ recebido: true });
+let proximoId = 1;
+
+app.post('/integracao/resultados', (req, res) => {
+  const { jogo, gamertag, data, hash } = req.body ?? {};
+  const pontos = Number(req.body?.pontos);
+  const tempo = Number(req.body?.tempo_segundos);
+  const responder = (status, corpo) => {
+    console.log(
+      `[ludica-mock] ${status} - ${gamertag ?? '?'} em ${jogo ?? '?'}: ${req.body?.pontos ?? '?'} pts, ` +
+      `${req.body?.tempo_segundos ?? '?'}s, data ${data ?? '?'}` + (corpo.error ? ` -> ${corpo.error}` : '')
+    );
+    res.status(status).json(corpo);
+  };
+
+  if (process.env.MOCK_FALHAR === 'true') return responder(503, { error: 'fora do ar (simulado)' });
+  if (!jogo || !gamertag || !data || !hash || req.body.pontos === undefined || req.body.tempo_segundos === undefined) {
+    return responder(400, { error: 'Campos obrigatórios: jogo, gamertag, data, pontos, tempo_segundos e hash' });
+  }
+  if (!Number.isInteger(pontos) || pontos < 0 || !Number.isInteger(tempo) || tempo < 0) {
+    return responder(400, { error: 'pontos e tempo_segundos devem ser inteiros maiores ou iguais a zero' });
+  }
+  if (hash !== hashLudica('JOGOU', gamertag, data, jogo)) return responder(401, { error: 'Hash inválido' });
+  if (data !== dataDoDia()) return responder(401, { error: 'Hash expirado' });
+  if (jogo !== configLudica().nomeJogo) return responder(404, { error: 'Jogo não encontrado' });
+
+  responder(201, {
+    mensagem: 'Resultado registrado',
+    jogo,
+    gamertag,
+    partida: { id_historico: proximoId++, pontos_obtidos: pontos, tempo_segundos: tempo, data_partida: new Date() }
+  });
 });
 
 const porta = Number(process.env.MOCK_PORTA || 4000);
-app.listen(porta, () => console.log(`[ludica-mock] ouvindo em http://localhost:${porta}/pontuacao`));
+app.listen(porta, () => console.log(`[ludica-mock] ouvindo em http://localhost:${porta}/integracao/resultados`));

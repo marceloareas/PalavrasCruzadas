@@ -1,6 +1,7 @@
-// Tela de entrada. A Cruzadinha so e acessada pelo link do Ludica, que cai
-// direto no backend (GET /api/auth/ludica) e volta para ca ja logado ou com
-// ?erro=<motivo>. Em desenvolvimento aparecem os atalhos de teste.
+// Tela de entrada. A Cruzadinha so e acessada pelo Ludica, que abre o jogo com
+// um POST de formulario direto no backend (POST /api/auth/ludica); ele volta
+// para ca ja logado ou com ?erro=<motivo>. Em desenvolvimento aparecem os
+// atalhos de teste.
 import { useEffect, useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
@@ -8,10 +9,10 @@ import { useSessao, inicioDoPapel } from '../Sessao.jsx';
 import { Erro } from '../componentes/comuns.jsx';
 
 const MOTIVOS = {
-  token: 'Link inválido ou expirado. Volte ao Lúdica e abra a Cruzadinha de novo.',
-  perfil: 'Seu perfil no Lúdica não tem acesso à Cruzadinha.',
+  token: 'Acesso inválido ou expirado. Entre pelo Lúdica e abra a Cruzadinha de novo.',
+  perfil: 'Seu tipo de usuário no Lúdica não tem acesso à Cruzadinha.',
   email: 'Este email já está associado a outra gamertag. Procure o suporte.',
-  dados: 'O link de acesso está incompleto. Volte ao Lúdica e abra a Cruzadinha de novo.'
+  dados: 'Os dados de acesso vieram incompletos. Entre pelo Lúdica e abra a Cruzadinha de novo.'
 };
 
 export default function Login() {
@@ -48,7 +49,7 @@ export default function Login() {
         )}
       </section>
 
-      {modo?.login_dev && <AtalhosDev perfis={modo.perfis} />}
+      {modo?.login_dev && <AtalhosDev urlRetorno={modo.url_retorno_dev} />}
     </div>
   );
 }
@@ -60,14 +61,32 @@ const GRUPOS = [
   ['administrador', 'Administradores']
 ];
 
-function AtalhosDev({ perfis }) {
+// Faz o mesmo que o navegador faz quando o Ludica abre o jogo: um POST de
+// formulario (nao fetch) para a rota de entrada.
+function postarFormulario(acao, campos) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = acao;
+  for (const [nome, valor] of Object.entries(campos)) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = nome;
+    input.value = valor;
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function AtalhosDev({ urlRetorno }) {
   const { entrar } = useSessao();
   const [usuarios, setUsuarios] = useState([]);
   const [escolhido, setEscolhido] = useState('');
   const [link, setLink] = useState({
     gamertag: 'aluno.novo',
     email: 'aluno.novo@aluno.cefet-rj.br',
-    perfil: perfis?.aluno ?? '2'
+    tipo_usuario: 'aluno',
+    url_retorno: urlRetorno ?? ''
   });
   const [erro, setErro] = useState(null);
 
@@ -88,10 +107,10 @@ function AtalhosDev({ perfis }) {
     }
   };
 
-  // Gera o mesmo link que o Ludica geraria e navega por ele (fluxo real).
+  // Gera os mesmos campos que o Ludica mandaria e faz o POST (fluxo real).
   const abrirLink = async () => {
-    const { url } = await api.post('/auth/dev/link-ludica', link);
-    window.location.assign(url);
+    const { acao, campos } = await api.post('/auth/dev/entrada-ludica', link);
+    postarFormulario(acao, campos);
   };
 
   return (
@@ -101,10 +120,11 @@ function AtalhosDev({ perfis }) {
       <Erro erro={erro} />
 
       <form className="stack" onSubmit={tentar(abrirLink)}>
-        <h3>Simular link do Lúdica</h3>
+        <h3>Simular entrada do Lúdica</h3>
         {[
           ['gamertag', 'gamertag', 'text'],
-          ['email', 'email', 'email']
+          ['email', 'email', 'email'],
+          ['url_retorno', 'url_retorno (para onde vai o resultado)', 'url']
         ].map(([campo, rotulo, tipo]) => (
           <label key={campo}>
             {rotulo}
@@ -117,13 +137,14 @@ function AtalhosDev({ perfis }) {
           </label>
         ))}
         <label>
-          perfil
-          <select value={link.perfil} onChange={(e) => setLink({ ...link, perfil: e.target.value })}>
-            <option value={perfis?.professor ?? '1'}>{perfis?.professor ?? '1'} — professor</option>
-            <option value={perfis?.aluno ?? '2'}>{perfis?.aluno ?? '2'} — aluno</option>
+          tipo_usuario
+          <select value={link.tipo_usuario} onChange={(e) => setLink({ ...link, tipo_usuario: e.target.value })}>
+            <option value="aluno">aluno</option>
+            <option value="professor">professor</option>
+            <option value="administrador">administrador (partida de teste, joga como aluno)</option>
           </select>
         </label>
-        <button className="btn">Abrir link</button>
+        <button className="btn">Entrar como se viesse do Lúdica</button>
       </form>
 
       <form className="stack" onSubmit={tentar(() => entrar(Number(escolhido)))}>

@@ -31,13 +31,15 @@ Limites usados também pelo front.
   "maxDicasPorPartida": 3, "descontoPorLetra": 0.2 }
 ```
 
+`GET /status` → `{ "status": "online", "jogo": "CRUZADINHA" }` (ou 503): o Lúdica chama antes de cada partida.
+
 ## Autenticação (pelo Lúdica — ver [integracao-ludica.md](integracao-ludica.md))
 
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/auth/ludica?perfil=&email=&gamertag=&token=` | — | 302 para `/` (logado) ou `/login?erro=...` |
+| POST | `/auth/ludica` (formulário) | `tipo_usuario, email, gamertag, hash, jogo, data, url_retorno` | 303 para `/` (logado) ou `/login?erro=...` |
 | GET | `/auth/eu` | — | usuário da sessão ou `null` |
-| GET | `/auth/modo` | — | `{ login_dev, url_ludica, perfis? }` |
+| GET | `/auth/modo` | — | `{ login_dev, url_ludica, url_retorno_dev? }` |
 | POST | `/auth/sair` | — | 204 |
 
 Só com `LOGIN_DEV=true` (desenvolvimento; em produção respondem 404):
@@ -46,7 +48,7 @@ Só com `LOGIN_DEV=true` (desenvolvimento; em produção respondem 404):
 |---|---|---|---|
 | GET | `/auth/usuarios` | — | lista de usuários (para "entrar como") |
 | POST | `/auth/entrar` | `{ "id_usuario": 1 }` | usuário logado |
-| POST | `/auth/dev/link-ludica` | `{ "perfil": "2", "email": "...", "gamertag": "..." }` | `{ url }`: link válido, como o Lúdica geraria |
+| POST | `/auth/dev/entrada-ludica` | `{ "tipo_usuario": "aluno", "email": "...", "gamertag": "...", "url_retorno"?: "..." }` | `{ acao, jogo, campos }`: os campos que o Lúdica mandaria; o front faz o POST |
 
 Usuário: `{ id_usuario, id_ludica, usertag, nome, email, papel }`.
 

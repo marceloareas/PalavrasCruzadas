@@ -2,8 +2,8 @@
 // Especificacao OpenAPI da API, servida pelo Swagger UI em /api/docs.
 //
 // A autenticacao e por cookie de sessao: chame POST /auth/entrar (atalho de
-// desenvolvimento) ou abra um link de GET /auth/ludica primeiro e o navegador
-// passa a mandar o cookie nas demais.
+// desenvolvimento) ou entre pelo Ludica (POST /auth/ludica) primeiro e o
+// navegador passa a mandar o cookie nas demais.
 // Ao criar/alterar rotas, atualize este arquivo.
 // ============================================================================
 import * as regras from './regras.js';
@@ -130,6 +130,17 @@ export const openapi = {
         }
       }
     },
+    '/status': {
+      get: {
+        tags: ['Sistema'],
+        summary: 'Status para o Lúdica (chamado antes de cada partida)',
+        description: 'O Lúdica espera 200 em até 3 s; senão avisa o aluno que o jogo está fora do ar.',
+        responses: {
+          200: ok('Jogo no ar.', { type: 'object', properties: { status: { type: 'string', example: 'online' }, jogo: { type: 'string', example: 'CRUZADINHA' } } }),
+          503: ok('Algum banco indisponível.')
+        }
+      }
+    },
     '/regras': {
       get: {
         tags: ['Sistema'],
@@ -165,21 +176,36 @@ export const openapi = {
       }
     },
     '/auth/ludica': {
-      get: {
+      post: {
         tags: ['Autenticação'],
-        summary: 'Entrada pelo link do Lúdica (redireciona)',
+        summary: 'Entrada vinda do Lúdica (formulário; redireciona)',
         description:
-          'O Lúdica gera o link. Confere `token` = hex(sha256(gamertag + AAAA-MM-DD + palavra)), ' +
-          'cria/atualiza o usuário pela gamertag e redireciona para `/` com a sessão criada. ' +
-          'Se algo falhar, redireciona para `/login?erro=token|perfil|email|dados`. ' +
-          'Ver docs/integracao-ludica.md.',
-        parameters: [
-          { name: 'perfil', in: 'query', required: true, schema: { type: 'string' }, description: '1 = professor, 2 = aluno (configurável)' },
-          { name: 'email', in: 'query', required: true, schema: { type: 'string' } },
-          { name: 'gamertag', in: 'query', required: true, schema: { type: 'string' } },
-          { name: 'token', in: 'query', required: true, schema: { type: 'string' } }
-        ],
-        responses: { 302: { description: 'Redireciona para `/` (logado) ou `/login?erro=...`.' } }
+          'O navegador do jogador chega aqui por um POST de formulário feito pelo Lúdica. ' +
+          'Confere `hash` = hex(sha256("LUD1C@-NOMEJOGO-JOGAR-gamertag-DDMMAAAA")) com o nosso NOMEJOGO ' +
+          '(LUDICA_NOME_JOGO, padrão CRUZADINHA) e a data de hoje em Brasília; cria/atualiza o usuário pela ' +
+          'gamertag, guarda o `url_retorno` e redireciona (303) para `/` com a sessão criada. Se algo falhar, ' +
+          'redireciona para `/login?erro=token|perfil|email|dados`. Ver docs/integracao-ludica.md.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/x-www-form-urlencoded': {
+              schema: {
+                type: 'object',
+                required: ['tipo_usuario', 'email', 'gamertag', 'hash', 'url_retorno'],
+                properties: {
+                  tipo_usuario: { type: 'string', enum: ['aluno', 'professor', 'administrador'] },
+                  email: { type: 'string' },
+                  gamertag: { type: 'string' },
+                  hash: { type: 'string', description: 'SHA-256 da seed JOGAR (64 hex)' },
+                  jogo: { type: 'string', description: 'informativo; o hash usa o nosso NOMEJOGO' },
+                  data: { type: 'string', description: 'DDMMAAAA; informativo, o hash usa a nossa data' },
+                  url_retorno: { type: 'string', description: 'para onde enviar o resultado da partida' }
+                }
+              }
+            }
+          }
+        },
+        responses: { 303: { description: 'Redireciona para `/` (logado) ou `/login?erro=...`.' } }
       }
     },
     '/auth/modo': {
@@ -191,24 +217,31 @@ export const openapi = {
           properties: {
             login_dev: { type: 'boolean' },
             url_ludica: { type: 'string', nullable: true },
-            perfis: { type: 'object', description: 'só em desenvolvimento' }
+            url_retorno_dev: { type: 'string', description: 'só em desenvolvimento' }
           }
         }) }
       }
     },
-    '/auth/dev/link-ludica': {
+    '/auth/dev/entrada-ludica': {
       post: {
         tags: ['Autenticação'],
-        summary: 'Gera um link de entrada válido, como o Lúdica geraria (só com LOGIN_DEV)',
+        summary: 'Gera os campos que o Lúdica mandaria na entrada (só com LOGIN_DEV)',
+        description: 'O front monta um formulário com `campos` e faz POST em `acao`.',
         requestBody: corpo(
           {
             type: 'object',
-            required: ['perfil', 'email', 'gamertag'],
-            properties: { perfil: { type: 'string' }, email: { type: 'string' }, gamertag: { type: 'string' } }
+            required: ['tipo_usuario', 'email', 'gamertag'],
+            properties: {
+              tipo_usuario: { type: 'string' }, email: { type: 'string' }, gamertag: { type: 'string' },
+              url_retorno: { type: 'string' }
+            }
           },
-          { perfil: '2', email: 'aluno.novo@aluno.cefet-rj.br', gamertag: 'aluno.novo' }
+          { tipo_usuario: 'aluno', email: 'aluno.novo@aluno.cefet-rj.br', gamertag: 'aluno.novo' }
         ),
-        responses: { 200: ok('OK', { type: 'object', properties: { url: { type: 'string' } } }), 404: erro('LOGIN_DEV desligado.') }
+        responses: {
+          200: ok('OK', { type: 'object', properties: { acao: { type: 'string' }, jogo: { type: 'string' }, campos: { type: 'object' } } }),
+          404: erro('LOGIN_DEV desligado.')
+        }
       }
     },
     '/auth/sair': {

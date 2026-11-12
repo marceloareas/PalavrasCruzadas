@@ -8,7 +8,7 @@
 #   - senhas e segredo da sessao vem do .env.prod (obrigatorios);
 #   - MongoDB com usuario e senha;
 #   - containers reiniciam sozinhos; sem cruzadas de exemplo por padrao;
-#   - so se entra pelo link do Ludica (sem atalhos de desenvolvimento) e o
+#   - so se entra pelo Ludica (sem atalhos de desenvolvimento) e o
 #     servico ludica-mock nao sobe.
 services:
   postgres:
@@ -32,13 +32,9 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?defina SESSION_SECRET no .env.prod}
       SEED_EXEMPLOS: ${SEED_EXEMPLOS:-false}
       LOGIN_DEV: "false"
-      LUDICA_SEGREDO: ${LUDICA_SEGREDO:?defina LUDICA_SEGREDO no .env.prod}
-      LUDICA_SEGREDO_ENVIO: ${LUDICA_SEGREDO_ENVIO:-}
-      LUDICA_URL_PONTUACAO: ${LUDICA_URL_PONTUACAO:-}
-      LUDICA_ID_JOGO: ${LUDICA_ID_JOGO:-}
-      LUDICA_PERFIL_PROFESSOR: ${LUDICA_PERFIL_PROFESSOR:-1}
-      LUDICA_PERFIL_ALUNO: ${LUDICA_PERFIL_ALUNO:-2}
+      LUDICA_NOME_JOGO: ${LUDICA_NOME_JOGO:-CRUZADINHA}
       LUDICA_URL_SITE: ${LUDICA_URL_SITE:-}
+      LUDICA_URL_RETORNO_DEV: ""
     ports: !reset []
     restart: unless-stopped
 

@@ -1,14 +1,16 @@
 // ============================================================================
-// Autenticacao. O unico jeito de entrar e pelo link do Ludica
-// (GET /ludica). Nao existe cadastro nem senha na Cruzadinha.
+// Autenticacao. O unico jeito de entrar e pelo Ludica, que abre o jogo com um
+// POST de formulario (POST /ludica). Nao existe cadastro nem senha aqui.
 //
 // Em desenvolvimento (LOGIN_DEV) ficam disponiveis atalhos para testar sem o
-// Ludica: "entrar como" um usuario ja existente e gerar um link valido.
-// Em producao essas rotas respondem 404.
+// Ludica: "entrar como" um usuario ja existente e simular a entrada do
+// Ludica. Em producao essas rotas respondem 404.
 // ============================================================================
 import { Router } from 'express';
 import { listarUsuarios, obterUsuario, entrarPeloLudica } from '../services/usuarioService.js';
-import { tokenValido, papelDoPerfil, linkDeEntrada } from '../services/ludica.js';
+import {
+  hashEntradaValido, papelDoTipo, urlRetornoValida, camposDeEntrada, configLudica
+} from '../services/ludica.js';
 import { ErroNegocio } from '../services/erros.js';
 
 const router = Router();
@@ -27,22 +29,27 @@ function logar(req, idUsuario) {
   });
 }
 
-const negar = (res, motivo) => res.redirect(302, `/login?erro=${encodeURIComponent(motivo)}`);
+// 303: o navegador segue com GET para a tela de entrada, que mostra o motivo.
+const negar = (res, motivo) => res.redirect(303, `/login?erro=${encodeURIComponent(motivo)}`);
 
-// Link vindo do Ludica: ?perfil=&email=&gamertag=&token=
-router.get('/ludica', async (req, res) => {
-  const { perfil, email, gamertag, token } = req.query;
-  if (![perfil, email, gamertag, token].every((v) => typeof v === 'string' && v.trim())) {
+// Entrada vinda do Ludica: POST de formulario com
+// tipo_usuario, email, gamertag, hash, jogo, data e url_retorno.
+// O hash e conferido com o NOSSO nome de jogo e a NOSSA data de hoje
+// (os campos jogo e data recebidos nao sao usados para isso).
+router.post('/ludica', async (req, res) => {
+  const { tipo_usuario: tipo, email, gamertag, hash, url_retorno: urlRetorno } = req.body ?? {};
+  if (![tipo, email, gamertag, hash, urlRetorno].every((v) => typeof v === 'string' && v.trim())) {
     return negar(res, 'dados');
   }
-  if (!tokenValido(gamertag.trim(), token.trim())) return negar(res, 'token');
-  const papel = papelDoPerfil(perfil);
+  if (!hashEntradaValido(gamertag.trim(), hash.trim())) return negar(res, 'token');
+  const papel = papelDoTipo(tipo);
   if (!papel) return negar(res, 'perfil');
+  if (!urlRetornoValida(urlRetorno.trim())) return negar(res, 'dados');
 
   try {
-    const usuario = await entrarPeloLudica({ gamertag, email, papel });
+    const usuario = await entrarPeloLudica({ gamertag, email, papel, urlRetorno: urlRetorno.trim() });
     await logar(req, usuario.id_usuario);
-    res.redirect(302, '/');
+    res.redirect(303, '/');
   } catch (err) {
     if (err instanceof ErroNegocio) return negar(res, err.status === 409 ? 'email' : 'dados');
     throw err;
@@ -60,12 +67,13 @@ router.get('/modo', (req, res) => {
   res.json({
     login_dev: dev,
     url_ludica: process.env.LUDICA_URL_SITE || null,
-    // numeros dos perfis, para o simulador de link (so em desenvolvimento)
-    perfis: dev
-      ? { professor: process.env.LUDICA_PERFIL_PROFESSOR || '1', aluno: process.env.LUDICA_PERFIL_ALUNO || '2' }
-      : undefined
+    // url_retorno sugerido no simulador (o ludica-mock), so em desenvolvimento
+    url_retorno_dev: dev ? urlRetornoDev() : undefined
   });
 });
+
+const urlRetornoDev = () =>
+  process.env.LUDICA_URL_RETORNO_DEV || 'http://localhost:4000/integracao/resultados';
 
 router.post('/sair', (req, res) => {
   req.session.destroy(() => res.status(204).end());
@@ -86,16 +94,23 @@ router.post('/entrar', soDev, async (req, res) => {
   res.json(usuario);
 });
 
-// Gera o link que o Ludica geraria (para testar o fluxo de verdade).
-router.post('/dev/link-ludica', soDev, (req, res) => {
-  const { perfil, email, gamertag } = req.body ?? {};
-  if (!process.env.LUDICA_SEGREDO) {
-    return res.status(422).json({ erro: 'Defina LUDICA_SEGREDO para gerar links.' });
+// Gera os campos que o Ludica mandaria na entrada; o front monta o
+// formulario e faz o POST para /api/auth/ludica (o fluxo de verdade).
+router.post('/dev/entrada-ludica', soDev, (req, res) => {
+  const { tipo_usuario, email, gamertag, url_retorno } = req.body ?? {};
+  if (!gamertag || !email || !tipo_usuario) {
+    return res.status(422).json({ erro: 'Informe tipo_usuario, email e gamertag.' });
   }
-  if (!gamertag || !email || perfil === undefined) {
-    return res.status(422).json({ erro: 'Informe perfil, email e gamertag.' });
-  }
-  res.json({ url: linkDeEntrada({ perfil, email: String(email), gamertag: String(gamertag) }) });
+  res.json({
+    acao: '/api/auth/ludica',
+    jogo: configLudica().nomeJogo,
+    campos: camposDeEntrada({
+      tipo_usuario: String(tipo_usuario),
+      email: String(email),
+      gamertag: String(gamertag),
+      url_retorno: String(url_retorno || urlRetornoDev())
+    })
+  });
 });
 
 export default router;
