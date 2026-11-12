@@ -76,7 +76,9 @@ const urlRetornoDev = () =>
   process.env.LUDICA_URL_RETORNO_DEV || 'http://localhost:4000/integracao/resultados';
 
 router.post('/sair', (req, res) => {
-  req.session.destroy(() => res.status(204).end());
+  // Devolve para onde o front manda o usuario depois de sair (a pagina
+  // inicial do Ludica, se configurada).
+  req.session.destroy(() => res.json({ url_ludica: process.env.LUDICA_URL_SITE || null }));
 });
 
 // ---- Atalhos de desenvolvimento -------------------------------------------

@@ -40,7 +40,7 @@ Limites usados também pelo front.
 | POST | `/auth/ludica` (formulário) | `tipo_usuario, email, gamertag, hash, jogo, data, url_retorno` | 303 para `/` (logado) ou `/login?erro=...` |
 | GET | `/auth/eu` | — | usuário da sessão ou `null` |
 | GET | `/auth/modo` | — | `{ login_dev, url_ludica, url_retorno_dev? }` |
-| POST | `/auth/sair` | — | 204 |
+| POST | `/auth/sair` | — | `{ url_ludica }`: o front manda o usuário para lá (ou para `/login`, se `null`) |
 
 Só com `LOGIN_DEV=true` (desenvolvimento; em produção respondem 404):
 

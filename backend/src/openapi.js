@@ -248,7 +248,10 @@ export const openapi = {
       post: {
         tags: ['Autenticação'],
         summary: 'Encerra a sessão',
-        responses: { 204: { description: 'Sessão encerrada.' } }
+        description: 'Devolve a página inicial do Lúdica (LUDICA_URL_SITE), para onde o front manda o usuário.',
+        responses: {
+          200: ok('Sessão encerrada.', { type: 'object', properties: { url_ludica: { type: 'string', nullable: true } } })
+        }
       }
     },
 

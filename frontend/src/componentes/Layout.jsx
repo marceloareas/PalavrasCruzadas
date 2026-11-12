@@ -49,8 +49,10 @@ export default function Layout() {
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={async () => {
-                  await sair();
-                  navegar('/login');
+                  // Volta para o Ludica (pagina inicial); sem LUDICA_URL_SITE, para a entrada.
+                  const urlLudica = await sair();
+                  if (urlLudica) window.location.assign(urlLudica);
+                  else navegar('/login');
                 }}
               >
                 Sair

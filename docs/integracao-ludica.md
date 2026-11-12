@@ -107,7 +107,7 @@ SELECT id_sessao, ludica_envio, ludica_tentativas, ludica_erro
 | Variável | Padrão | Para quê |
 |---|---|---|
 | `LUDICA_NOME_JOGO` | `CRUZADINHA` | NOMEJOGO da seed; tem que bater com o título cadastrado no Lúdica |
-| `LUDICA_URL_SITE` | — | botão "Ir para o Lúdica" na tela de entrada (opcional) |
+| `LUDICA_URL_SITE` | — | página inicial do Lúdica (ex.: `http://localhost:5173/home`): o **Sair** e o botão "Ir para o Lúdica" levam para lá. Vazia = o Sair volta para a tela de entrada da Cruzadinha |
 | `LOGIN_DEV` | `true` fora de produção | atalhos "entrar como" e "simular entrada do Lúdica" |
 | `LUDICA_URL_RETORNO_DEV` | ludica-mock | `url_retorno` sugerido no simulador (só desenvolvimento) |
 

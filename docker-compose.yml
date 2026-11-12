@@ -62,7 +62,7 @@ services:
       # vai para o url_retorno que o Ludica manda na entrada; nao ha URL fixa.
       LOGIN_DEV: "true"                 # atalhos "entrar como" / simular entrada
       LUDICA_NOME_JOGO: ${LUDICA_NOME_JOGO:-CRUZADINHA}   # titulo do jogo no Ludica
-      LUDICA_URL_SITE: ${LUDICA_URL_SITE:-}               # botao "Ir para o Ludica"
+      LUDICA_URL_SITE: ${LUDICA_URL_SITE:-}               # "Sair" e "Ir para o Ludica" vao para ca
       # url_retorno sugerido no simulador de entrada (aponta para o ludica-mock)
       LUDICA_URL_RETORNO_DEV: http://ludica-mock:4000/integracao/resultados
     ports:
